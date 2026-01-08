@@ -4,7 +4,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a template repository for creating **Symfony AI Mate extensions**. The MatesOfMate ecosystem allows developers to create MCP (Model Context Protocol) extensions that provide tools and resources to AI assistants.
+This is a **PHPStan AI Mate extension** that provides AI assistants with efficient static analysis capabilities optimized for minimal token consumption. The extension uses TOON (Token-Optimized Output Notation) format to achieve ~67% token reduction compared to standard PHPStan JSON output.
+
+**Package**: `matesofmate/phpstan-mate-extension`
+**Namespace**: `MatesOfMate\PhpStan`
 
 ## Essential Commands
 
@@ -13,13 +16,13 @@ This is a template repository for creating **Symfony AI Mate extensions**. The M
 # Install dependencies
 composer install
 
-# Run all tests
+# Run all tests (37 tests, 80 assertions)
 composer test
 
 # Run tests with coverage report
 composer test -- --coverage-html coverage/
 
-# Check code quality (validates composer.json, runs Rector, PHP CS Fixer, PHPStan)
+# Check code quality (validates composer.json, runs Rector, PHP CS Fixer, PHPStan Level 8)
 composer lint
 
 # Auto-fix code style and apply automated refactorings
@@ -40,7 +43,7 @@ vendor/bin/rector process --dry-run             # Preview changes
 vendor/bin/rector process                       # Apply changes
 
 # PHPUnit (run specific test)
-vendor/bin/phpunit tests/Capability/ExampleToolTest.php
+vendor/bin/phpunit tests/Capability/AnalyseToolTest.php
 vendor/bin/phpunit --filter testMethodName
 ```
 
@@ -48,149 +51,306 @@ vendor/bin/phpunit --filter testMethodName
 
 ### Core Concepts
 
-**Tools vs Resources:**
-- **Tools** (`#[McpTool]`): Executable actions invoked by AI (e.g., list entities, analyze code)
-- **Resources** (`#[McpResource]`): Static/semi-static data provided to AI (e.g., configuration, routes)
+**MCP Tools**: This extension provides 4 tools for PHPStan analysis:
+- `phpstan_analyse` - Run full PHPStan analysis with TOON output
+- `phpstan_analyse_file` - Analyze single file
+- `phpstan_analyse_diff` - Analyze only git-changed files (killer feature)
+- `phpstan_clear_cache` - Clear PHPStan result cache
 
-**Discovery Mechanism:**
-The `extra.ai-mate` section in `composer.json` defines:
-- `scan-dirs`: Directories to scan for `#[McpTool]` and `#[McpResource]` attributes
-- `includes`: Service configuration files to load
+**MCP Resources**: Provides 1 resource:
+- `phpstan://config` - PHPStan configuration information
+
+**TOON Format**: Token-Optimized Output Notation achieves ~67% token reduction through:
+- Pipe-delimited compact format
+- Structured data fields
+- Message truncation
+- Smart file path shortening
 
 ### Directory Structure
 
 ```
-src/Capability/          # All tools and resources go here
-config/services.php      # Symfony DI configuration for registering capabilities
-tests/Capability/        # Tests mirror src/Capability/ structure
+src/
+├── Capability/          # MCP Tools and Resources
+│   ├── AnalyseTool.php
+│   ├── AnalyseFileTool.php
+│   ├── AnalyseDiffTool.php
+│   ├── ClearCacheTool.php
+│   └── ConfigResource.php
+├── Runner/              # PHPStan execution layer
+│   ├── PhpStanRunner.php
+│   └── ProcessExecutor.php
+├── Parser/              # Output parsing and config detection
+│   ├── JsonOutputParser.php
+│   ├── ConfigurationDetector.php
+│   └── NeonParser.php
+├── Formatter/           # TOON format generation
+│   ├── ToonFormatter.php
+│   ├── MessageTruncator.php
+│   └── ErrorGrouper.php
+├── Git/                 # Git integration for diff analysis
+│   └── DiffAnalyser.php
+└── DTO/                 # Data transfer objects
+    ├── AnalysisResult.php
+    ├── ErrorMessage.php
+    └── ProcessResult.php
+
+tests/                   # Mirror src/ structure
+config/services.php      # Symfony DI configuration
 ```
 
-### Service Registration Pattern
+### Service Registration
 
-In `config/services.php`:
+All services are registered in `config/services.php` with autowiring:
+
 ```php
 $services = $container->services()
     ->defaults()
     ->autowire()      // Auto-inject dependencies
     ->autoconfigure(); // Auto-register MCP attributes
 
-$services->set(YourTool::class);
+// Tools
+$services->set(AnalyseTool::class);
+$services->set(AnalyseFileTool::class);
+$services->set(AnalyseDiffTool::class);
+$services->set(ClearCacheTool::class);
+
+// Resources
+$services->set(ConfigResource::class);
+
+// Runner layer
+$services->set(PhpStanRunner::class);
+$services->set(ProcessExecutor::class);
+
+// Parser layer
+$services->set(JsonOutputParser::class);
+$services->set(ConfigurationDetector::class);
+$services->set(NeonParser::class);
+
+// Formatter layer
+$services->set(ToonFormatter::class);
+$services->set(MessageTruncator::class);
+$services->set(ErrorGrouper::class);
+
+// Git layer
+$services->set(DiffAnalyser::class);
 ```
 
-All classes in `src/Capability/` with `#[McpTool]` or `#[McpResource]` attributes are automatically discovered if registered as services.
+### Layered Architecture
 
-### Tool Implementation Pattern
+#### 1. MCP Tools Layer (`src/Capability/`)
+
+**AnalyseTool.php** - Main analysis entry point
+```php
+#[McpTool(
+    name: 'phpstan_analyse',
+    description: 'Run PHPStan static analysis with token-optimized TOON output...'
+)]
+public function execute(
+    ?string $configuration = null,
+    ?int $level = null,
+    ?string $path = null,
+    string $outputFormat = 'toon'
+): string
+```
+
+**AnalyseDiffTool.php** - Git-aware analysis (killer feature)
+```php
+#[McpTool(
+    name: 'phpstan_analyse_diff',
+    description: 'Run PHPStan only on files changed since git ref (default: main/master)...'
+)]
+public function execute(
+    ?string $baseRef = null,
+    ?int $level = null,
+    ?string $configuration = null
+): string
+```
+
+#### 2. Runner Layer (`src/Runner/`)
+
+**CRITICAL**: Uses `PHP_BINARY` to execute PHPStan for consistent PHP version usage.
 
 ```php
-use Mcp\Capability\Attribute\McpTool;
+// ProcessExecutor.php
+public function buildPhpStanCommand(string $phpStanScript): array
+{
+    // Use the current PHP binary to execute PHPStan
+    return [\PHP_BINARY, $phpStanScript];
+}
+```
 
-class YourTool
+**PhpStanRunner.php** coordinates PHPStan execution:
+- Builds command arguments (`--error-format=json`, `--no-progress`)
+- Tracks execution time and memory usage
+- Auto-detects configuration files
+- Handles cache clearing
+
+#### 3. Parser Layer (`src/Parser/`)
+
+**JsonOutputParser.php** - Parses PHPStan JSON into `AnalysisResult` DTOs
+
+**ConfigurationDetector.php** - Auto-detects config files:
+- `phpstan.neon`
+- `phpstan.neon.dist`
+- `phpstan.dist.neon`
+
+**NeonParser.php** - Basic NEON parsing for extracting level and settings
+
+#### 4. Formatter Layer (`src/Formatter/`)
+
+**ToonFormatter.php** - Generates 5 output modes:
+- `toon` - Token-optimized format (~67% reduction)
+- `summary` - Ultra-compact summary (~89% reduction)
+- `detailed` - Detailed with fix hints
+- `by-file` - Grouped by file
+- `by-type` - Grouped by error type
+
+**MessageTruncator.php** - Intelligent message shortening:
+- Removes common prefixes
+- Shortens FQCNs: `\App\Entity\User` → `App\User`
+- Truncates long messages with `...`
+
+**ErrorGrouper.php** - Groups errors by:
+- File path
+- Error type (missing-type, nullable-return, etc.)
+- Fixability (auto, manual, complex)
+
+#### 5. Git Layer (`src/Git/`)
+
+**DiffAnalyser.php** - Git integration:
+- Detects changed PHP files since base ref
+- Auto-detects main/master branch
+- Filters for PHP files only (`--diff-filter=ACMR`)
+
+#### 6. DTOs (`src/DTO/`)
+
+All DTOs use readonly properties for immutability:
+
+```php
+readonly class AnalysisResult
 {
     public function __construct(
-        private readonly SomeService $service,
-    ) {
-    }
+        public int $errorCount,
+        public int $fileErrorCount,
+        public array $errors, // ErrorMessage[]
+        public ?int $level,
+        public ?float $executionTime,
+        public ?string $memoryUsage,
+    ) {}
 
-    #[McpTool(
-        name: 'framework-action-name',  // Format: {framework}-{action}
-        description: 'Precise description of when AI should use this tool'
-    )]
-    public function execute(string $param): string
+    public function hasErrors(): bool
     {
-        // Return JSON for structured data
-        return json_encode($result, \JSON_THROW_ON_ERROR | \JSON_PRETTY_PRINT);
+        return $this->errorCount > 0;
     }
 }
 ```
-
-**Key points:**
-- Tool names use lowercase with hyphens: `example-list-entities`
-- Descriptions are critical - AI uses them to decide when to invoke tools
-- Return JSON strings for structured data
-- Use constructor injection for dependencies
-
-### Resource Implementation Pattern
-
-```php
-use Mcp\Capability\Attribute\McpResource;
-
-class YourResource
-{
-    #[McpResource(
-        uri: 'myframework://config',    // Custom URI scheme
-        name: 'framework_config',
-        mimeType: 'application/json'
-    )]
-    public function getConfig(): array
-    {
-        return [
-            'uri' => 'myframework://config',
-            'mimeType' => 'application/json',
-            'text' => json_encode($data, \JSON_THROW_ON_ERROR | \JSON_PRETTY_PRINT),
-        ];
-    }
-}
-```
-
-**Key points:**
-- Must return array with `uri`, `mimeType`, and `text` keys
-- URI uses custom scheme (e.g., `example://`, `symfony://`)
-- Typically return `application/json` or `text/plain`
 
 ## Code Quality Standards
 
 ### Important Design Decisions
 
-⚠️ **Template-specific conventions** (users can customize when creating their extensions):
+⚠️ **Template-specific conventions** (maintained for consistency):
 
 - **No strict types declarations** - All PHP files omit `declare(strict_types=1)` by design
 - **No final classes** - All classes are non-final to allow extensibility
 - **JSON error handling** - Always use `\JSON_THROW_ON_ERROR | \JSON_PRETTY_PRINT` with `json_encode()`
+- **PHP_BINARY usage** - All PHPStan executions must use current PHP process binary
 
-### PHP CS Fixer Configuration
-- Follows `@Symfony` ruleset with risky rules enabled
-- Enforces specific class element ordering (traits → constants → properties → methods)
-- Requires MatesOfMate organisation header comment
-- Uses parallel processing for performance
-- Excludes only `var/` and `vendor/` directories
+### PHPStan Level 8 Requirements
 
-### PHPStan Configuration
-- **Level 8** (maximum strictness)
-- Analyzes both `src/` and `tests/`
-- PHPDoc types are not treated as certain (forces proper type declarations)
-- PHPUnit extension enabled
-- Empty `ignoreErrors` section available for adding exceptions
+**Critical**: This extension must pass PHPStan Level 8 (maximum strictness)
 
-### Rector Configuration
-- Targets **PHP 8.2+**
-- Applies: UP_TO_PHP_82, code quality, dead code removal, early return, type declarations
-- PHPUnit 10.0 rules enabled
+Common type annotations needed:
+```php
+/**
+ * @param array<int, string> $command
+ */
+public function execute(array $command): ProcessResult
 
-## Testing Conventions
+/**
+ * @return array<string, mixed>
+ */
+public function parse(string $json): array
 
-- Tests live in `tests/` mirroring `src/` structure
+/**
+ * @return array{auto: list<ErrorMessage>, manual: list<ErrorMessage>, complex: list<ErrorMessage>}
+ */
+public function groupByFixability(array $errors): array
+```
+
+**getcwd() handling**:
+```php
+$projectRoot = getcwd();
+if (false === $projectRoot) {
+    throw new \RuntimeException('Unable to determine current working directory');
+}
+```
+
+### Testing Conventions
+
+- 37 tests, 80 assertions, 100% passing
+- Tests mirror `src/` structure
 - Extend `PHPUnit\Framework\TestCase`
-- Use descriptive test method names: `testReturnsValidJson`, `testContainsExpectedKeys`
-- Test JSON output validity and structure for tools
-- Test return array structure for resources
+- Test names: `testReturnsValidJson`, `testHandlesMissingConfiguration`
+- Validate JSON output structure
+- Test edge cases (empty results, missing config, git scenarios)
 
-## CI/CD
+## TOON Output Format
 
-GitHub Actions workflow (`.github/workflows/ci.yml`) runs automatically:
-- **Lint job**: Validates composer.json, runs Rector, PHP CS Fixer, PHPStan
-- **Test job**: Runs PHPUnit on PHP 8.2 and 8.3
+### Format Specification
 
-## When Creating New Extensions
+**Successful Analysis:**
+```
+summary{level,files,errors,time,memory}:
+6|127|0|3.421s|156MB
+status:OK
+```
 
-1. Replace all `example`/`Example`/`ExampleExtension` references with your framework name
-2. Update `composer.json` package name to `matesofmate/{framework}-extension` and description
-3. Update `.github/CODEOWNERS` - replace `@your-username` with your GitHub handle (keep `@wachterjohannes`)
-4. Create tools in `src/Capability/` with clear, descriptive tool names and descriptions
-5. Register services in `config/services.php`
-6. Write tests in `tests/Capability/` covering tool/resource behavior
-7. Update README.md with framework-specific installation and usage instructions
-8. Ensure all quality checks pass: `composer lint && composer test`
-9. Tag release (e.g., `v0.1.0`) and submit to Packagist
+**With Errors:**
+```
+summary{level,files_with_errors,total_errors,time}:
+6|4|12|4.892s
+
+errors[12]{file,line,msg,ignorable}:
+UserService.php|45|$id: int expected, string given|T
+UserService.php|67|getUser(): returns User|null not User|T
+ApiController.php|23|Undefined property $request|F
+```
+
+### Token Efficiency
+
+| Output Format | Token Count | Reduction |
+|---------------|-------------|-----------|
+| PHPStan JSON  | ~450 tokens | Baseline  |
+| TOON Format   | ~150 tokens | **67%**   |
+| Summary Mode  | ~50 tokens  | **89%**   |
+
+## Development Guidelines
+
+### When Adding New Tools
+
+1. Create class in `src/Capability/`
+2. Add `#[McpTool]` attribute with clear description
+3. Return JSON string: `json_encode($data, \JSON_THROW_ON_ERROR | \JSON_PRETTY_PRINT)`
+4. Register in `config/services.php`
+5. Create test in `tests/Capability/`
+6. Ensure PHPStan Level 8 compliance
+7. Run `composer lint && composer test`
+
+### When Modifying Core Layers
+
+**Runner Layer**: Changes must maintain PHP_BINARY usage
+**Parser Layer**: Must handle all PHPStan JSON edge cases
+**Formatter Layer**: Must preserve token efficiency targets
+**Git Layer**: Must handle both main and master branches
+
+### When Fixing PHPStan Issues
+
+Common patterns:
+- Add `@param array<type>` for array parameters
+- Add `@return array<type>` for array returns
+- Use explicit variables instead of dynamic arrays for complex return types
+- Always check `getcwd() !== false` before use
 
 ## File Header Template
 
@@ -224,30 +384,30 @@ Short summary (50 chars or less)
 
 **✅ Good Examples**:
 ```
-Add Doctrine entity discovery tool
+Improve TOON format token efficiency
 
-- Enable AI to discover entity metadata
-- Support association mapping queries
-- Include field type information
+- Reduce message truncation threshold
+- Optimize file path shortening
+- Add smart FQCN abbreviation
 ```
 
 ```
-Improve error handling for API tools
+Add support for PHPStan baseline files
 
-- Add graceful degradation for missing services
-- Provide helpful error messages
-- Include recovery suggestions
+- Parse baseline.neon files
+- Compare current errors vs baseline
+- Report new errors separately
 ```
 
 **❌ Bad Examples**:
 ```
-Update tool files
+Update ToonFormatter.php
 
 Co-Authored-By: Claude Code <noreply@anthropic.com>
 ```
 
 ```
-Implement features - coded by claude-code
+Fix bugs - coded by claude-code
 ```
 
 **Rules**:
@@ -256,3 +416,11 @@ Implement features - coded by claude-code
 - ✅ Bullet list describing concepts/improvements, not file names
 - ✅ Natural language explaining what changed
 - ✅ Focus on the WHY and WHAT, not technical details
+
+## CI/CD
+
+GitHub Actions workflow (`.github/workflows/ci.yml`) runs automatically:
+- **Lint job**: Validates composer.json, runs Rector, PHP CS Fixer, PHPStan Level 8
+- **Test job**: Runs PHPUnit on PHP 8.2 and 8.3
+
+All checks must pass before merging.
