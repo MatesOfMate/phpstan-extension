@@ -11,8 +11,15 @@
 
 namespace MatesOfMate\PhpStan\Formatter;
 
-use MatesOfMate\PhpStan\DTO\AnalysisResult;
+use MatesOfMate\PhpStan\Runner\AnalysisResult;
 
+/**
+ * Formats PHPStan analysis results in token-optimized TOON format.
+ *
+ * @internal
+ *
+ * @author Johannes Wachter <johannes@sulu.io>
+ */
 class ToonFormatter
 {
     public function __construct(

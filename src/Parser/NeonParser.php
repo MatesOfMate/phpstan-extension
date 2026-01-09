@@ -11,6 +11,13 @@
 
 namespace MatesOfMate\PhpStan\Parser;
 
+/**
+ * Basic NEON configuration file parser for extracting PHPStan settings.
+ *
+ * @internal
+ *
+ * @author Johannes Wachter <johannes@sulu.io>
+ */
 class NeonParser
 {
     /**

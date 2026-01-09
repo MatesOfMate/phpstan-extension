@@ -11,8 +11,8 @@
 
 namespace MatesOfMate\PhpStan\Tests\Formatter;
 
-use MatesOfMate\PhpStan\DTO\ErrorMessage;
 use MatesOfMate\PhpStan\Formatter\ErrorGrouper;
+use MatesOfMate\PhpStan\Parser\ErrorMessage;
 use PHPUnit\Framework\TestCase;
 
 class ErrorGrouperTest extends TestCase

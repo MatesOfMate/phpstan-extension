@@ -15,6 +15,11 @@ use MatesOfMate\PhpStan\Formatter\ToonFormatter;
 use MatesOfMate\PhpStan\Runner\PhpStanRunner;
 use Mcp\Capability\Attribute\McpTool;
 
+/**
+ * Runs PHPStan static analysis with token-optimized output.
+ *
+ * @author Johannes Wachter <johannes@sulu.io>
+ */
 class AnalyseTool
 {
     public function __construct(
@@ -24,7 +29,7 @@ class AnalyseTool
     }
 
     #[McpTool(
-        name: 'phpstan_analyse',
+        name: 'phpstan-analyse',
         description: 'Run PHPStan static analysis with token-optimized TOON output. Use for: checking code quality, finding type errors, validating changes. Auto-detects configuration. Returns structured analysis results with error details.',
     )]
     public function execute(
@@ -33,37 +38,19 @@ class AnalyseTool
         ?string $path = null,
         string $outputFormat = 'toon',
     ): string {
-        try {
-            $options = [];
-            if (null !== $configuration) {
-                $options['configuration'] = $configuration;
-            }
-            if (null !== $level) {
-                $options['level'] = $level;
-            }
-            if (null !== $path) {
-                $options['path'] = $path;
-            }
-
-            $result = $this->runner->analyse($options);
-
-            $output = $this->formatter->format($result, $outputFormat);
-
-            return json_encode([
-                'success' => !$result->hasErrors(),
-                'output' => $output,
-                'errorCount' => $result->errorCount,
-                'fileErrorCount' => $result->fileErrorCount,
-                'level' => $result->level,
-                'executionTime' => $result->executionTime,
-                'memoryUsage' => $result->memoryUsage,
-            ], \JSON_THROW_ON_ERROR | \JSON_PRETTY_PRINT);
-        } catch (\Throwable $e) {
-            return json_encode([
-                'success' => false,
-                'error' => $e->getMessage(),
-                'output' => '',
-            ], \JSON_THROW_ON_ERROR | \JSON_PRETTY_PRINT);
+        $options = [];
+        if (null !== $configuration) {
+            $options['configuration'] = $configuration;
         }
+        if (null !== $level) {
+            $options['level'] = $level;
+        }
+        if (null !== $path) {
+            $options['path'] = $path;
+        }
+
+        $result = $this->runner->analyse($options);
+
+        return $this->formatter->format($result, $outputFormat);
     }
 }

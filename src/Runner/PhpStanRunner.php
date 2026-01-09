@@ -11,14 +11,21 @@
 
 namespace MatesOfMate\PhpStan\Runner;
 
-use MatesOfMate\PhpStan\DTO\AnalysisResult;
 use MatesOfMate\PhpStan\Parser\ConfigurationDetector;
 use MatesOfMate\PhpStan\Parser\JsonOutputParser;
+use MatesOfMate\PhpStan\Process\PhpStanProcessExecutor;
 
+/**
+ * Executes PHPStan analysis and manages process execution.
+ *
+ * @internal
+ *
+ * @author Johannes Wachter <johannes@sulu.io>
+ */
 class PhpStanRunner
 {
     public function __construct(
-        private readonly ProcessExecutor $executor,
+        private readonly PhpStanProcessExecutor $executor,
         private readonly JsonOutputParser $parser,
         private readonly ConfigurationDetector $configDetector,
     ) {
@@ -29,16 +36,11 @@ class PhpStanRunner
      */
     public function analyse(array $options): AnalysisResult
     {
-        $phpStanScript = $this->executor->findPhpStanBinary();
-        if (null === $phpStanScript) {
-            throw new \RuntimeException('PHPStan binary not found. Please install phpstan/phpstan via Composer.');
-        }
-
         $startTime = microtime(true);
         $startMemory = memory_get_usage(true);
 
-        $args = $this->buildCommandArgs($phpStanScript, $options);
-        $result = $this->executor->execute($args, $options['timeout'] ?? 300);
+        $args = $this->buildCommandArgs($options);
+        $result = $this->executor->execute('phpstan', $args, $options['timeout'] ?? 300);
 
         $executionTime = microtime(true) - $startTime;
         $memoryUsage = memory_get_usage(true) - $startMemory;
@@ -63,21 +65,14 @@ class PhpStanRunner
 
     public function clearCache(?string $configuration = null): void
     {
-        $phpStanScript = $this->executor->findPhpStanBinary();
-        if (null === $phpStanScript) {
-            throw new \RuntimeException('PHPStan binary not found.');
-        }
-
-        // Use current PHP binary to execute PHPStan
-        $args = $this->executor->buildPhpStanCommand($phpStanScript);
-        $args[] = 'clear-result-cache';
+        $args = ['clear-result-cache'];
 
         if (null !== $configuration) {
             $args[] = '-c';
             $args[] = $configuration;
         }
 
-        $result = $this->executor->execute($args);
+        $result = $this->executor->execute('phpstan', $args);
 
         if (!$result->isSuccessful()) {
             throw new \RuntimeException('Failed to clear PHPStan cache: '.$result->errorOutput);
@@ -89,13 +84,9 @@ class PhpStanRunner
      *
      * @return array<int, string>
      */
-    private function buildCommandArgs(string $phpStanScript, array $options): array
+    private function buildCommandArgs(array $options): array
     {
-        // Use current PHP binary to execute PHPStan
-        $args = $this->executor->buildPhpStanCommand($phpStanScript);
-
-        // Add PHPStan arguments
-        $args[] = 'analyse';
+        $args = ['analyse'];
         $args[] = '--error-format=json';
         $args[] = '--no-progress';
 

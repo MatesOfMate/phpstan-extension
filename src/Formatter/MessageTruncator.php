@@ -11,12 +11,23 @@
 
 namespace MatesOfMate\PhpStan\Formatter;
 
-class MessageTruncator
+use MatesOfMate\Common\Truncator\MessageTruncator as CommonMessageTruncator;
+use MatesOfMate\Common\Truncator\MessageTruncatorInterface;
+
+/**
+ * Truncates error messages for token efficiency with PHPStan-specific rules.
+ *
+ * @internal
+ *
+ * @author Johannes Wachter <johannes@sulu.io>
+ */
+class MessageTruncator implements MessageTruncatorInterface
 {
-    public function truncate(string $message, int $maxLength = 80): string
+    private readonly CommonMessageTruncator $truncator;
+
+    public function __construct()
     {
-        // Remove common prefixes for token efficiency
-        $prefixes = [
+        $this->truncator = new CommonMessageTruncator([
             'Parameter ',
             'Method ',
             'Property ',
@@ -24,42 +35,30 @@ class MessageTruncator
             'Access to ',
             'Cannot ',
             'Variable ',
-        ];
+        ]);
+    }
 
-        foreach ($prefixes as $prefix) {
-            if (str_starts_with($message, $prefix)) {
-                $message = substr($message, \strlen($prefix));
-                break;
-            }
-        }
+    public function truncate(string $message, int $maxLength = 80): string
+    {
+        $message = $this->truncator->truncate($message, $maxLength);
 
-        // Shorten fully qualified class names
-        $message = preg_replace('/\\\\([A-Z][a-z]+)\\\\/', '$1\\', $message) ?? $message;
-
-        // Shorten "of method ClassName::methodName()"
-        $message = preg_replace('/of method [A-Za-z0-9\\\\]+::/', 'of ', $message) ?? $message;
-
-        // Truncate if still too long
-        if (\strlen($message) > $maxLength) {
-            return substr($message, 0, $maxLength - 3).'...';
-        }
+        // PHPStan-specific: Shorten "of method ClassName::methodName()"
+        $message = (string) preg_replace('/of method [A-Za-z0-9\\\\]+::/', 'of ', $message);
 
         return $message;
     }
 
     public function truncateFileName(string $path, ?string $projectRoot = null): string
     {
-        if (null === $projectRoot) {
-            $cwd = getcwd();
-            $projectRoot = false !== $cwd ? $cwd : '';
+        $projectRoot ??= getcwd();
+        if (false === $projectRoot) {
+            return basename($path);
         }
 
-        // Remove project root prefix
-        if ('' !== $projectRoot && str_starts_with($path, $projectRoot)) {
+        if (str_starts_with($path, $projectRoot)) {
             $path = substr($path, \strlen($projectRoot) + 1);
         }
 
-        // Remove src/ prefix if present
         if (str_starts_with($path, 'src/')) {
             return substr($path, 4);
         }

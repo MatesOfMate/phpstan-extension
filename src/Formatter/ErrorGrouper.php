@@ -11,8 +11,15 @@
 
 namespace MatesOfMate\PhpStan\Formatter;
 
-use MatesOfMate\PhpStan\DTO\ErrorMessage;
+use MatesOfMate\PhpStan\Parser\ErrorMessage;
 
+/**
+ * Groups PHPStan errors by file, type, and fixability.
+ *
+ * @internal
+ *
+ * @author Johannes Wachter <johannes@sulu.io>
+ */
 class ErrorGrouper
 {
     /**

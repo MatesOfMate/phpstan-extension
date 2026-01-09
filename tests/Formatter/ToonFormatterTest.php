@@ -11,11 +11,11 @@
 
 namespace MatesOfMate\PhpStan\Tests\Formatter;
 
-use MatesOfMate\PhpStan\DTO\AnalysisResult;
-use MatesOfMate\PhpStan\DTO\ErrorMessage;
 use MatesOfMate\PhpStan\Formatter\ErrorGrouper;
 use MatesOfMate\PhpStan\Formatter\MessageTruncator;
 use MatesOfMate\PhpStan\Formatter\ToonFormatter;
+use MatesOfMate\PhpStan\Parser\ErrorMessage;
+use MatesOfMate\PhpStan\Runner\AnalysisResult;
 use PHPUnit\Framework\TestCase;
 
 class ToonFormatterTest extends TestCase

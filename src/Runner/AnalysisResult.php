@@ -9,8 +9,17 @@
  * file that was distributed with this source code.
  */
 
-namespace MatesOfMate\PhpStan\DTO;
+namespace MatesOfMate\PhpStan\Runner;
 
+use MatesOfMate\PhpStan\Parser\ErrorMessage;
+
+/**
+ * Represents the result of a PHPStan analysis with timing and memory metrics.
+ *
+ * @internal
+ *
+ * @author Johannes Wachter <johannes@sulu.io>
+ */
 readonly class AnalysisResult
 {
     /**

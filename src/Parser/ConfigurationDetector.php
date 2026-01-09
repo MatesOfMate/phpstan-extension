@@ -11,24 +11,32 @@
 
 namespace MatesOfMate\PhpStan\Parser;
 
-class ConfigurationDetector
+use MatesOfMate\Common\Config\ConfigurationDetector as CommonConfigDetector;
+use MatesOfMate\Common\Config\ConfigurationDetectorInterface;
+
+/**
+ * Detects PHPStan configuration files in project directories.
+ *
+ * @internal
+ *
+ * @author Johannes Wachter <johannes@sulu.io>
+ */
+class ConfigurationDetector implements ConfigurationDetectorInterface
 {
-    private const CONFIG_FILES = [
-        'phpstan.neon',
-        'phpstan.neon.dist',
-        'phpstan.dist.neon',
-    ];
+    private readonly CommonConfigDetector $detector;
 
-    public function detect(string $projectRoot): ?string
+    public function __construct()
     {
-        foreach (self::CONFIG_FILES as $configFile) {
-            $path = $projectRoot.'/'.$configFile;
-            if (file_exists($path)) {
-                return $path;
-            }
-        }
+        $this->detector = new CommonConfigDetector([
+            'phpstan.neon',
+            'phpstan.neon.dist',
+            'phpstan.dist.neon',
+        ]);
+    }
 
-        return null;
+    public function detect(?string $projectRoot = null): ?string
+    {
+        return $this->detector->detect($projectRoot);
     }
 
     public function getConfiguredLevel(string $configFile): ?int

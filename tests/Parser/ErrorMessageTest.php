@@ -9,9 +9,9 @@
  * file that was distributed with this source code.
  */
 
-namespace MatesOfMate\PhpStan\Tests\DTO;
+namespace MatesOfMate\PhpStan\Tests\Parser;
 
-use MatesOfMate\PhpStan\DTO\ErrorMessage;
+use MatesOfMate\PhpStan\Parser\ErrorMessage;
 use PHPUnit\Framework\TestCase;
 
 class ErrorMessageTest extends TestCase

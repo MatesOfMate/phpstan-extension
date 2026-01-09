@@ -21,8 +21,8 @@ use MatesOfMate\PhpStan\Git\DiffAnalyser;
 use MatesOfMate\PhpStan\Parser\ConfigurationDetector;
 use MatesOfMate\PhpStan\Parser\JsonOutputParser;
 use MatesOfMate\PhpStan\Parser\NeonParser;
+use MatesOfMate\PhpStan\Process\PhpStanProcessExecutor;
 use MatesOfMate\PhpStan\Runner\PhpStanRunner;
-use MatesOfMate\PhpStan\Runner\ProcessExecutor;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 
 return static function (ContainerConfigurator $container): void {
@@ -42,7 +42,7 @@ return static function (ContainerConfigurator $container): void {
 
     // Runner layer
     $services->set(PhpStanRunner::class);
-    $services->set(ProcessExecutor::class);
+    $services->set(PhpStanProcessExecutor::class);
 
     // Parser layer
     $services->set(JsonOutputParser::class);

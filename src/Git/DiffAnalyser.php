@@ -11,28 +11,32 @@
 
 namespace MatesOfMate\PhpStan\Git;
 
-use MatesOfMate\PhpStan\Runner\ProcessExecutor;
+use MatesOfMate\PhpStan\Process\PhpStanProcessExecutor;
 
+/**
+ * Analyzes git diffs to identify changed PHP files for targeted PHPStan analysis.
+ *
+ * @internal
+ *
+ * @author Johannes Wachter <johannes@sulu.io>
+ */
 class DiffAnalyser
 {
     public function __construct(
-        private readonly ProcessExecutor $executor,
+        private readonly PhpStanProcessExecutor $executor,
     ) {
     }
 
     /**
      * @return string[]
      */
-    public function getChangedPhpFiles(?string $baseRef = null): array
+    public function getChangedPhpFiles(string $baseRef): array
     {
         if (!$this->isGitRepository()) {
             return [];
         }
 
-        $baseRef ??= $this->detectDefaultBranch();
-
         $args = [
-            'git',
             'diff',
             '--name-only',
             '--diff-filter=ACMR',
@@ -42,7 +46,7 @@ class DiffAnalyser
             '*.php',
         ];
 
-        $result = $this->executor->execute($args);
+        $result = $this->executor->execute('git', $args, usePhpBinary: false);
 
         if (!$result->isSuccessful()) {
             return [];
@@ -56,22 +60,20 @@ class DiffAnalyser
         return array_values($files);
     }
 
-    public function detectDefaultBranch(): string
+    public function detectDefaultBranch(): ?string
     {
         // Try main first
-        $result = $this->executor->execute(['git', 'rev-parse', '--verify', 'main']);
-        if ($result->isSuccessful()) {
+        if ($this->refExists('main')) {
             return 'main';
         }
 
         // Fallback to master
-        $result = $this->executor->execute(['git', 'rev-parse', '--verify', 'master']);
-        if ($result->isSuccessful()) {
+        if ($this->refExists('master')) {
             return 'master';
         }
 
-        // Default to main if neither exists
-        return 'main';
+        // No baseline branch exists
+        return null;
     }
 
     public function hasUncommittedChanges(): bool
@@ -80,14 +82,21 @@ class DiffAnalyser
             return false;
         }
 
-        $result = $this->executor->execute(['git', 'diff', '--quiet']);
+        $result = $this->executor->execute('git', ['diff', '--quiet'], usePhpBinary: false);
 
         return !$result->isSuccessful();
     }
 
     public function isGitRepository(): bool
     {
-        $result = $this->executor->execute(['git', 'rev-parse', '--git-dir']);
+        $result = $this->executor->execute('git', ['rev-parse', '--git-dir'], usePhpBinary: false);
+
+        return $result->isSuccessful();
+    }
+
+    private function refExists(string $ref): bool
+    {
+        $result = $this->executor->execute('git', ['rev-parse', '--verify', '--quiet', $ref], usePhpBinary: false);
 
         return $result->isSuccessful();
     }

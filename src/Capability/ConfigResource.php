@@ -14,6 +14,11 @@ namespace MatesOfMate\PhpStan\Capability;
 use MatesOfMate\PhpStan\Parser\ConfigurationDetector;
 use Mcp\Capability\Attribute\McpResource;
 
+/**
+ * Provides PHPStan configuration information as an MCP resource.
+ *
+ * @author Johannes Wachter <johannes@sulu.io>
+ */
 class ConfigResource
 {
     public function __construct(

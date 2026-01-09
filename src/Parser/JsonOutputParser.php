@@ -11,9 +11,15 @@
 
 namespace MatesOfMate\PhpStan\Parser;
 
-use MatesOfMate\PhpStan\DTO\AnalysisResult;
-use MatesOfMate\PhpStan\DTO\ErrorMessage;
+use MatesOfMate\PhpStan\Runner\AnalysisResult;
 
+/**
+ * Parses PHPStan JSON output into structured data.
+ *
+ * @internal
+ *
+ * @author Johannes Wachter <johannes@sulu.io>
+ */
 class JsonOutputParser
 {
     public function parse(string $jsonOutput): AnalysisResult
@@ -33,7 +39,7 @@ class JsonOutputParser
         }
 
         return new AnalysisResult(
-            errorCount: $data['totals']['errors'] ?? 0,
+            errorCount: \count($errors),
             fileErrorCount: $data['totals']['file_errors'] ?? 0,
             errors: $errors,
             level: null,

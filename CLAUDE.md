@@ -6,8 +6,147 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a **PHPStan AI Mate extension** that provides AI assistants with efficient static analysis capabilities optimized for minimal token consumption. The extension uses TOON (Token-Optimized Output Notation) format to achieve ~67% token reduction compared to standard PHPStan JSON output.
 
-**Package**: `matesofmate/phpstan-mate-extension`
+**Package**: `matesofmate/phpstan-extension`
 **Namespace**: `MatesOfMate\PhpStan`
+
+## Shared Components
+
+This extension uses the `matesofmate/common` package for shared functionality:
+
+**Location**: Separate package at monorepo root, used via composer path repositories
+
+**Components**:
+- **Process**: ProcessExecutorInterface, ProcessExecutor, ProcessResult for CLI tool execution with PHP binary reuse
+- **Config**: ConfigurationDetectorInterface, ConfigurationDetector for auto-detecting config files
+- **Truncator**: MessageTruncatorInterface, MessageTruncator for token-efficient output
+
+**Composer Path Repository Setup**:
+
+The common package is configured as a path repository in `composer.json`:
+
+```json
+{
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../common"
+        }
+    ],
+    "require": {
+        "matesofmate/common": "*@dev"
+    }
+}
+```
+
+After running `composer install`, the common package is symlinked automatically into `vendor/matesofmate/common`.
+
+**Example Implementation**:
+
+```php
+// Process Executor (uses composition)
+use MatesOfMate\Common\Process\ProcessExecutor as CommonProcessExecutor;
+use MatesOfMate\Common\Process\ProcessExecutorInterface;
+
+class PhpStanProcessExecutor implements ProcessExecutorInterface
+{
+    private readonly CommonProcessExecutor $executor;
+
+    public function __construct()
+    {
+        $cwd = getcwd();
+        $vendorPaths = false !== $cwd ? [
+            $cwd.'/vendor/bin/phpstan',
+            $cwd.'/vendor/phpstan/phpstan/phpstan',
+        ] : [];
+
+        $this->executor = new CommonProcessExecutor($vendorPaths);
+    }
+
+    public function execute(array $command, int $timeout = 300): ProcessResult
+    {
+        return $this->executor->execute($command, $timeout);
+    }
+}
+
+// Configuration Detector (uses composition)
+use MatesOfMate\Common\Config\ConfigurationDetector as CommonConfigDetector;
+use MatesOfMate\Common\Config\ConfigurationDetectorInterface;
+
+class ConfigurationDetector implements ConfigurationDetectorInterface
+{
+    private readonly CommonConfigDetector $detector;
+
+    public function __construct()
+    {
+        $this->detector = new CommonConfigDetector([
+            'phpstan.neon',
+            'phpstan.neon.dist',
+            'phpstan.dist.neon',
+        ]);
+    }
+
+    public function detect(?string $projectRoot = null): ?string
+    {
+        return $this->detector->detect($projectRoot);
+    }
+}
+
+// Message Truncator (uses composition)
+use MatesOfMate\Common\Formatter\MessageTruncator as CommonMessageTruncator;
+use MatesOfMate\Common\Formatter\MessageTruncatorInterface;
+
+class MessageTruncator implements MessageTruncatorInterface
+{
+    private readonly CommonMessageTruncator $truncator;
+
+    public function __construct()
+    {
+        $this->truncator = new CommonMessageTruncator([
+            'Parameter ',
+            'Method ',
+            'Property ',
+            'Call to ',
+            'Access to ',
+            'Cannot ',
+            'Variable ',
+        ]);
+    }
+
+    public function truncate(string $message, int $maxLength = 80): string
+    {
+        $message = $this->truncator->truncate($message, $maxLength);
+        // PHPStan-specific: Shorten "of method ClassName::methodName()"
+        return (string) preg_replace('/of method [A-Za-z0-9\\\\]+::/', 'of ', $message);
+    }
+}
+```
+
+**PHPStan-Specific Components**:
+
+The `DiffAnalyser` for git-aware analysis remains PHPStan-specific and is not in the common package.
+
+## Response Format
+
+All tools return **raw TOON-formatted strings** for maximum token efficiency:
+
+```
+summary{level,files,errors,time,memory}:
+6|127|0|3.421s|156MB
+status:OK
+```
+
+**With errors**:
+```
+summary{level,files_with_errors,total_errors,time}:
+6|4|12|4.892s
+
+errors[12]{file,line,msg,ignorable}:
+UserService.php|45|$id: int expected, string given|T
+UserService.php|67|getUser(): returns User|null not User|T
+ApiController.php|23|Undefined property $request|F
+```
+
+**Important**: Tools return TOON strings directly, not JSON-wrapped responses. This is the standard format for all MatesOfMate extensions.
 
 ## Essential Commands
 
@@ -16,7 +155,7 @@ This is a **PHPStan AI Mate extension** that provides AI assistants with efficie
 # Install dependencies
 composer install
 
-# Run all tests (37 tests, 80 assertions)
+# Run all tests (55+ tests, 120+ assertions)
 composer test
 
 # Run tests with coverage report
@@ -78,21 +217,20 @@ src/
 │   └── ConfigResource.php
 ├── Runner/              # PHPStan execution layer
 │   ├── PhpStanRunner.php
-│   └── ProcessExecutor.php
+│   └── AnalysisResult.php        # Analysis result with timing/memory
 ├── Parser/              # Output parsing and config detection
 │   ├── JsonOutputParser.php
 │   ├── ConfigurationDetector.php
-│   └── NeonParser.php
+│   ├── NeonParser.php
+│   └── ErrorMessage.php          # Parsed error from JSON output
 ├── Formatter/           # TOON format generation
 │   ├── ToonFormatter.php
 │   ├── MessageTruncator.php
 │   └── ErrorGrouper.php
 ├── Git/                 # Git integration for diff analysis
 │   └── DiffAnalyser.php
-└── DTO/                 # Data transfer objects
-    ├── AnalysisResult.php
-    ├── ErrorMessage.php
-    └── ProcessResult.php
+└── Process/             # CLI process execution
+    └── PhpStanProcessExecutor.php
 
 tests/                   # Mirror src/ structure
 config/services.php      # Symfony DI configuration
@@ -222,10 +360,9 @@ public function buildPhpStanCommand(string $phpStanScript): array
 - Auto-detects main/master branch
 - Filters for PHP files only (`--diff-filter=ACMR`)
 
-#### 6. DTOs (`src/DTO/`)
+#### 6. Data Transfer Objects
 
-All DTOs use readonly properties for immutability:
-
+**AnalysisResult** (`src/Runner/AnalysisResult.php`) - Created by Runner layer:
 ```php
 readonly class AnalysisResult
 {
@@ -244,6 +381,21 @@ readonly class AnalysisResult
     }
 }
 ```
+
+**ErrorMessage** (`src/Parser/ErrorMessage.php`) - Created by Parser layer:
+```php
+readonly class ErrorMessage
+{
+    public function __construct(
+        public string $file,
+        public int $line,
+        public string $message,
+        public bool $ignorable,
+    ) {}
+}
+```
+
+**ProcessResult** - Uses `MatesOfMate\Common\Process\ProcessResult` from common package
 
 ## Code Quality Standards
 
@@ -288,12 +440,14 @@ if (false === $projectRoot) {
 
 ### Testing Conventions
 
-- 37 tests, 80 assertions, 100% passing
+- 55+ tests, 120+ assertions, 100% passing
 - Tests mirror `src/` structure
 - Extend `PHPUnit\Framework\TestCase`
 - Test names: `testReturnsValidJson`, `testHandlesMissingConfiguration`
 - Validate JSON output structure
 - Test edge cases (empty results, missing config, git scenarios)
+- **Capability Layer**: Complete test coverage (5 test files, 18+ test methods)
+- **Implementation Layers**: DTO, Formatter, Parser layers fully tested
 
 ## TOON Output Format
 
@@ -368,6 +522,39 @@ All PHP files must include this copyright header:
  * file that was distributed with this source code.
  */
 ```
+
+## DocBlock Annotations
+
+**@author annotation**: All class-level DocBlocks should include an @author annotation with the current user:
+```php
+/**
+ * Runs PHPStan analysis with token-optimized output.
+ *
+ * @author Your Name <your@email.com>
+ */
+class AnalyseTool
+{
+}
+```
+
+**@internal annotation**: Use @internal for classes, methods, or properties that are implementation details and should not be used by extension consumers:
+```php
+/**
+ * Parses PHPStan JSON output into structured data.
+ *
+ * @internal
+ * @author Your Name <your@email.com>
+ */
+class JsonOutputParser
+{
+}
+```
+
+Use @internal for:
+- Implementation detail classes (parsers, formatters, internal DTOs)
+- Private helper methods exposed for testing
+- Framework-specific adapters
+- Classes in `src/` subdirectories not meant for direct use
 
 ## Commit Message Convention
 

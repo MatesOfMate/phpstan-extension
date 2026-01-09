@@ -70,7 +70,7 @@ class JsonOutputParserTest extends TestCase
 
         $result = $this->parser->parse($json);
 
-        $this->assertSame(0, $result->errorCount);
+        $this->assertSame(2, $result->errorCount);
         $this->assertSame(2, $result->fileErrorCount);
         $this->assertCount(2, $result->errors);
 
@@ -112,6 +112,7 @@ class JsonOutputParserTest extends TestCase
 
         $result = $this->parser->parse($json);
 
+        $this->assertSame(3, $result->errorCount);
         $this->assertCount(3, $result->errors);
         $this->assertSame('src/File1.php', $result->errors[0]->file);
         $this->assertSame('src/File2.php', $result->errors[1]->file);

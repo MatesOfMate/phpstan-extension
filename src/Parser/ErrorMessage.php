@@ -9,8 +9,15 @@
  * file that was distributed with this source code.
  */
 
-namespace MatesOfMate\PhpStan\DTO;
+namespace MatesOfMate\PhpStan\Parser;
 
+/**
+ * Represents a single error message parsed from PHPStan JSON output.
+ *
+ * @internal
+ *
+ * @author Johannes Wachter <johannes@sulu.io>
+ */
 readonly class ErrorMessage
 {
     public function __construct(

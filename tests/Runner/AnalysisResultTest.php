@@ -9,10 +9,10 @@
  * file that was distributed with this source code.
  */
 
-namespace MatesOfMate\PhpStan\Tests\DTO;
+namespace MatesOfMate\PhpStan\Tests\Runner;
 
-use MatesOfMate\PhpStan\DTO\AnalysisResult;
-use MatesOfMate\PhpStan\DTO\ErrorMessage;
+use MatesOfMate\PhpStan\Parser\ErrorMessage;
+use MatesOfMate\PhpStan\Runner\AnalysisResult;
 use PHPUnit\Framework\TestCase;
 
 class AnalysisResultTest extends TestCase
