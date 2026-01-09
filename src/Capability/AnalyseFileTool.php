@@ -11,7 +11,9 @@
 
 namespace MatesOfMate\PhpStan\Capability;
 
+use MatesOfMate\PhpStan\Config\ConfigurationDetector;
 use MatesOfMate\PhpStan\Formatter\ToonFormatter;
+use MatesOfMate\PhpStan\Parser\JsonOutputParser;
 use MatesOfMate\PhpStan\Runner\PhpStanRunner;
 use Mcp\Capability\Attribute\McpTool;
 
@@ -22,35 +24,39 @@ use Mcp\Capability\Attribute\McpTool;
  */
 class AnalyseFileTool
 {
+    use BuildsPhpstanArguments;
+
     public function __construct(
         private readonly PhpStanRunner $runner,
+        private readonly JsonOutputParser $parser,
         private readonly ToonFormatter $formatter,
+        private readonly ConfigurationDetector $configDetector,
     ) {
     }
 
     #[McpTool(
         name: 'phpstan-analyse-file',
-        description: 'Run PHPStan analysis on a specific file. Faster than full analysis when working on individual files. Ideal for quick validation of a single file during development.',
+        description: 'Run PHPStan analysis on a specific file. Returns token-optimized TOON format. Available modes: "toon" (compact format), "summary" (totals only), "detailed" (full messages). Use for: validating changes to a single file, debugging specific file issues, focused analysis.',
     )]
     public function execute(
-        string $file,
-        ?int $level = null,
+        ?string $file = null,
         ?string $configuration = null,
+        ?int $level = null,
+        string $mode = 'toon',
     ): string {
-        if (!file_exists($file)) {
-            throw new \InvalidArgumentException("File not found: {$file}");
+        if (null === $file) {
+            throw new \InvalidArgumentException('The "file" parameter is required for phpstan-analyse-file tool.');
         }
 
-        $options = ['path' => $file];
-        if (null !== $configuration) {
-            $options['configuration'] = $configuration;
-        }
-        if (null !== $level) {
-            $options['level'] = $level;
-        }
+        $args = $this->buildPhpstanArgs(
+            path: $file,
+            configuration: $configuration,
+            level: $level,
+        );
 
-        $result = $this->runner->analyse($options);
+        $runResult = $this->runner->run('analyse', $args);
+        $analysisResult = $this->parser->parse($runResult);
 
-        return $this->formatter->format($result, 'toon');
+        return $this->formatter->format($analysisResult, $mode);
     }
 }

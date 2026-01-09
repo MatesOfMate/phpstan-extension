@@ -12,6 +12,7 @@
     ],
     "require": {
         "php": ">=8.2",
+        "helgesverre/toon": "^1.0",
         "matesofmate/common": "*@dev",
         "phpstan/phpstan": "^2.0",
         "symfony/ai-mate": "^0.1",

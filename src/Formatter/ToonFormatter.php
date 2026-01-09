@@ -11,10 +11,10 @@
 
 namespace MatesOfMate\PhpStan\Formatter;
 
-use MatesOfMate\PhpStan\Runner\AnalysisResult;
+use MatesOfMate\PhpStan\Parser\AnalysisResult;
 
 /**
- * Formats PHPStan analysis results in token-optimized TOON format.
+ * Formats PHPStan analysis results using TOON (Token-Oriented Object Notation) for token-efficient output.
  *
  * @internal
  *
@@ -22,12 +22,6 @@ use MatesOfMate\PhpStan\Runner\AnalysisResult;
  */
 class ToonFormatter
 {
-    public function __construct(
-        private readonly MessageTruncator $truncator,
-        private readonly ErrorGrouper $grouper,
-    ) {
-    }
-
     public function format(AnalysisResult $result, string $mode = 'toon'): string
     {
         return match ($mode) {
@@ -42,181 +36,143 @@ class ToonFormatter
 
     private function formatToon(AnalysisResult $result): string
     {
-        $output = [];
-
-        // Summary line
-        $output[] =
-            'summary{level,files_with_errors,total_errors,time}:'
-        ;
-        $output[] = \sprintf(
-            '%s|%d|%d|%.3fs',
-            $result->level ?? 'N/A',
-            $result->fileErrorCount,
-            $result->errorCount,
-            $result->executionTime ?? 0,
-        );
+        $data = [
+            'summary' => [
+                'level' => $result->level ?? 'N/A',
+                'files_with_errors' => $result->fileErrorCount,
+                'total_errors' => $result->errorCount,
+                'time' => null !== $result->executionTime ? round($result->executionTime, 3).'s' : null,
+            ],
+        ];
 
         if (0 === $result->errorCount) {
-            $output[] = 'status:OK';
-
-            return implode("\n", $output);
-        }
-
-        $output[] = '';
-
-        // Errors
-        $output[] = \sprintf('errors[%d]{file,line,msg,ignorable}:', \count($result->errors));
-
-        foreach ($result->errors as $error) {
-            $file = $this->truncator->truncateFileName($error->file);
-            $message = $this->truncator->truncate($error->message);
-            $ignorable = $error->ignorable ? 'T' : 'F';
-
-            $output[] = \sprintf(
-                '%s|%d|%s|%s',
-                $file,
-                $error->line,
-                $message,
-                $ignorable,
+            $data['status'] = 'OK';
+        } else {
+            $data['errors'] = array_map(
+                fn (array $e): array => [
+                    'file' => basename((string) $e['file']),
+                    'line' => $e['line'],
+                    'message' => $e['message'],
+                    'ignorable' => $e['ignorable'],
+                ],
+                $result->errors
             );
         }
 
-        return implode("\n", $output);
+        return toon($data);
     }
 
     private function formatSummary(AnalysisResult $result): string
     {
-        $output = [];
-
-        $output[] = 'summary{files,errors,level}:';
-        $output[] = \sprintf(
-            '%d|%d|%s',
-            $result->fileErrorCount,
-            $result->errorCount,
-            $result->level ?? 'N/A',
-        );
-
-        $output[] = 0 === $result->errorCount ? 'status:OK' : 'status:FAIL';
-
-        return implode("\n", $output);
+        return toon([
+            'files_with_errors' => $result->fileErrorCount,
+            'total_errors' => $result->errorCount,
+            'level' => $result->level ?? 'N/A',
+            'status' => 0 === $result->errorCount ? 'OK' : 'FAIL',
+        ]);
     }
 
     private function formatDetailed(AnalysisResult $result): string
     {
-        $output = [];
-
-        // Summary
-        $output[] = 'summary{level,files,errors,time}:';
-        $output[] = \sprintf(
-            '%s|%d|%d|%.3fs',
-            $result->level ?? 'N/A',
-            $result->fileErrorCount,
-            $result->errorCount,
-            $result->executionTime ?? 0,
-        );
+        $data = [
+            'summary' => [
+                'level' => $result->level ?? 'N/A',
+                'files_with_errors' => $result->fileErrorCount,
+                'total_errors' => $result->errorCount,
+                'time' => null !== $result->executionTime ? round($result->executionTime, 3).'s' : null,
+            ],
+        ];
 
         if (0 === $result->errorCount) {
-            $output[] = 'status:OK';
-
-            return implode("\n", $output);
-        }
-
-        $output[] = '';
-
-        // Errors with hints
-        $output[] = \sprintf('errors[%d]{file,line,msg,hint}:', \count($result->errors));
-
-        foreach ($result->errors as $error) {
-            $file = $this->truncator->truncateFileName($error->file);
-            $message = $this->truncator->truncate($error->message, 100);
-            $hint = $this->generateFixHint($error->message);
-
-            $output[] = \sprintf(
-                '%s|%d|%s|%s',
-                $file,
-                $error->line,
-                $message,
-                $hint,
+            $data['status'] = 'OK';
+        } else {
+            $data['errors'] = array_map(
+                fn (array $e): array => [
+                    'file' => $e['file'],
+                    'line' => $e['line'],
+                    'message' => $e['message'],
+                    'ignorable' => $e['ignorable'],
+                ],
+                $result->errors
             );
         }
 
-        return implode("\n", $output);
+        return toon($data);
     }
 
     private function formatByFile(AnalysisResult $result): string
     {
-        $output = [];
-        $output[] = 'summary{files_with_errors,total_errors}:';
-        $output[] = \sprintf('%d|%d', $result->fileErrorCount, $result->errorCount);
-        $output[] = '';
+        $grouped = [];
 
-        $grouped = $this->grouper->groupByFile($result->errors);
-
-        foreach ($grouped as $file => $errors) {
-            $shortFile = $this->truncator->truncateFileName($file);
-            $output[] = \sprintf('%s (%d errors):', $shortFile, \count($errors));
-
-            foreach ($errors as $error) {
-                $message = $this->truncator->truncate($error->message);
-                $output[] = \sprintf('  L%d: %s', $error->line, $message);
-            }
-
-            $output[] = '';
+        foreach ($result->errors as $error) {
+            $file = basename((string) $error['file']);
+            $grouped[$file][] = $error;
         }
 
-        return implode("\n", $output);
+        ksort($grouped);
+
+        $data = [
+            'summary' => [
+                'files_with_errors' => $result->fileErrorCount,
+                'total_errors' => $result->errorCount,
+            ],
+            'by_file' => $grouped,
+        ];
+
+        return toon($data);
     }
 
     private function formatByType(AnalysisResult $result): string
     {
-        $output = [];
-        $output[] = 'summary{total_errors}:';
-        $output[] = \sprintf('%d', $result->errorCount);
-        $output[] = '';
+        $grouped = [];
 
-        $grouped = $this->grouper->groupByType($result->errors);
-
-        foreach ($grouped as $type => $errors) {
-            $output[] = \sprintf('%s (%d):', $type, \count($errors));
-
-            foreach ($errors as $error) {
-                $file = $this->truncator->truncateFileName($error->file);
-                $output[] = \sprintf('  %s:%d', $file, $error->line);
-            }
-
-            $output[] = '';
+        foreach ($result->errors as $error) {
+            $type = $this->categorizeError($error['message']);
+            $grouped[$type][] = [
+                'file' => basename((string) $error['file']),
+                'line' => $error['line'],
+                'message' => $error['message'],
+            ];
         }
 
-        return implode("\n", $output);
+        ksort($grouped);
+
+        $data = [
+            'summary' => [
+                'total_errors' => $result->errorCount,
+            ],
+            'by_type' => $grouped,
+        ];
+
+        return toon($data);
     }
 
-    private function generateFixHint(string $message): string
+    private function categorizeError(string $message): string
     {
-        // Generate smart fix hints based on error patterns
-        if (preg_match('/has no type/', $message)) {
-            return 'Add type declaration';
+        if (str_contains($message, 'has no type')) {
+            return 'missing-type';
         }
 
-        if (preg_match('/has no return type/', $message)) {
-            return 'Add return type';
+        if (str_contains($message, 'has no return type')) {
+            return 'missing-return-type';
         }
 
-        if (preg_match('/should return .+ but returns .+\|null/', $message)) {
-            return 'Add |null to return type or add null check';
+        if (str_contains($message, 'should return') && str_contains($message, '|null')) {
+            return 'nullable-return';
         }
 
-        if (preg_match('/undefined property/', $message)) {
-            return 'Check property name or add property declaration';
+        if (str_contains($message, 'undefined property')) {
+            return 'undefined-property';
         }
 
-        if (preg_match('/undefined method/', $message)) {
-            return 'Check method name or add method';
+        if (str_contains($message, 'undefined method')) {
+            return 'undefined-method';
         }
 
-        if (preg_match('/expects .+ but .+ given/', $message)) {
-            return 'Fix parameter type at call site';
+        if (str_contains($message, 'expects') && str_contains($message, 'given')) {
+            return 'type-mismatch';
         }
 
-        return 'Review and fix error';
+        return 'other';
     }
 }

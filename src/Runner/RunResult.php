@@ -9,22 +9,21 @@
  * file that was distributed with this source code.
  */
 
-namespace MatesOfMate\PhpStan\Parser;
+namespace MatesOfMate\PhpStan\Runner;
 
 /**
- * Represents a single error message parsed from PHPStan JSON output.
+ * Represents the raw result of a PHPStan command execution.
  *
  * @internal
  *
  * @author Johannes Wachter <johannes@sulu.io>
  */
-readonly class ErrorMessage
+class RunResult
 {
     public function __construct(
-        public string $file,
-        public int $line,
-        public string $message,
-        public bool $ignorable,
+        public readonly int $exitCode,
+        public readonly string $output,
+        public readonly string $errorOutput,
     ) {
     }
 }

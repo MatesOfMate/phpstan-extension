@@ -9,29 +9,27 @@
  * file that was distributed with this source code.
  */
 
-namespace MatesOfMate\PhpStan\Runner;
-
-use MatesOfMate\PhpStan\Parser\ErrorMessage;
+namespace MatesOfMate\PhpStan\Parser;
 
 /**
- * Represents the result of a PHPStan analysis with timing and memory metrics.
+ * Represents the result of a PHPStan analysis with errors and metrics.
  *
  * @internal
  *
  * @author Johannes Wachter <johannes@sulu.io>
  */
-readonly class AnalysisResult
+class AnalysisResult
 {
     /**
-     * @param ErrorMessage[] $errors
+     * @param array<int, array<string, mixed>> $errors
      */
     public function __construct(
-        public int $errorCount,
-        public int $fileErrorCount,
-        public array $errors,
-        public ?int $level,
-        public ?float $executionTime,
-        public ?string $memoryUsage,
+        public readonly int $errorCount,
+        public readonly int $fileErrorCount,
+        public readonly array $errors,
+        public readonly ?int $level,
+        public readonly ?float $executionTime,
+        public readonly ?string $memoryUsage,
     ) {
     }
 

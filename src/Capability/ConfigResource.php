@@ -11,7 +11,7 @@
 
 namespace MatesOfMate\PhpStan\Capability;
 
-use MatesOfMate\PhpStan\Parser\ConfigurationDetector;
+use MatesOfMate\PhpStan\Config\ConfigurationDetector;
 use Mcp\Capability\Attribute\McpResource;
 
 /**
@@ -29,11 +29,7 @@ class ConfigResource
     /**
      * @return array{uri: string, mimeType: string, text: string}
      */
-    #[McpResource(
-        uri: 'phpstan://config',
-        name: 'phpstan_configuration',
-        mimeType: 'application/json',
-    )]
+    #[McpResource(uri: 'phpstan://config', name: 'phpstan_configuration', description: 'PHPStan project configuration details in TOON format. Provides project root, config file path, configured level, and full config content. Use for: understanding project setup, checking configured analysis level, locating configuration files, troubleshooting configuration issues.', mimeType: 'text/plain')]
     public function getConfiguration(): array
     {
         $projectRoot = getcwd();
@@ -56,8 +52,8 @@ class ConfigResource
 
         return [
             'uri' => 'phpstan://config',
-            'mimeType' => 'application/json',
-            'text' => json_encode($data, \JSON_THROW_ON_ERROR | \JSON_PRETTY_PRINT),
+            'mimeType' => 'text/plain',
+            'text' => toon($data),
         ];
     }
 }

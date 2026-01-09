@@ -11,7 +11,8 @@
 
 namespace MatesOfMate\PhpStan\Parser;
 
-use MatesOfMate\PhpStan\Runner\AnalysisResult;
+use MatesOfMate\Common\Truncator\MessageTruncator;
+use MatesOfMate\PhpStan\Runner\RunResult;
 
 /**
  * Parses PHPStan JSON output into structured data.
@@ -22,19 +23,32 @@ use MatesOfMate\PhpStan\Runner\AnalysisResult;
  */
 class JsonOutputParser
 {
-    public function parse(string $jsonOutput): AnalysisResult
+    public function __construct(
+        private readonly MessageTruncator $truncator = new MessageTruncator([
+            'Parameter ',
+            'Method ',
+            'Property ',
+            'Call to ',
+            'Access to ',
+            'Cannot ',
+            'Variable ',
+        ]),
+    ) {
+    }
+
+    public function parse(RunResult $runResult): AnalysisResult
     {
-        $data = json_decode($jsonOutput, true, 512, \JSON_THROW_ON_ERROR);
+        $data = json_decode($runResult->output, true, 512, \JSON_THROW_ON_ERROR);
 
         $errors = [];
         foreach ($data['files'] ?? [] as $file => $fileData) {
             foreach ($fileData['messages'] ?? [] as $message) {
-                $errors[] = new ErrorMessage(
-                    file: $file,
-                    line: $message['line'] ?? 0,
-                    message: $message['message'] ?? '',
-                    ignorable: $message['ignorable'] ?? true,
-                );
+                $errors[] = [
+                    'file' => $file,
+                    'line' => $message['line'] ?? 0,
+                    'message' => $this->truncator->truncate($message['message'] ?? '', 200),
+                    'ignorable' => $message['ignorable'] ?? true,
+                ];
             }
         }
 

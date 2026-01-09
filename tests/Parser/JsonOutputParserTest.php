@@ -12,6 +12,7 @@
 namespace MatesOfMate\PhpStan\Tests\Parser;
 
 use MatesOfMate\PhpStan\Parser\JsonOutputParser;
+use MatesOfMate\PhpStan\Runner\RunResult;
 use PHPUnit\Framework\TestCase;
 
 class JsonOutputParserTest extends TestCase
@@ -34,7 +35,8 @@ class JsonOutputParserTest extends TestCase
             'errors' => [],
         ], \JSON_THROW_ON_ERROR);
 
-        $result = $this->parser->parse($json);
+        $runResult = new RunResult(exitCode: 0, output: $json, errorOutput: '');
+        $result = $this->parser->parse($runResult);
 
         $this->assertSame(0, $result->errorCount);
         $this->assertSame(0, $result->fileErrorCount);
@@ -68,21 +70,22 @@ class JsonOutputParserTest extends TestCase
             'errors' => [],
         ], \JSON_THROW_ON_ERROR);
 
-        $result = $this->parser->parse($json);
+        $runResult = new RunResult(exitCode: 1, output: $json, errorOutput: '');
+        $result = $this->parser->parse($runResult);
 
         $this->assertSame(2, $result->errorCount);
         $this->assertSame(2, $result->fileErrorCount);
         $this->assertCount(2, $result->errors);
 
-        $this->assertSame('src/Test.php', $result->errors[0]->file);
-        $this->assertSame(10, $result->errors[0]->line);
-        $this->assertSame('Error message 1', $result->errors[0]->message);
-        $this->assertTrue($result->errors[0]->ignorable);
+        $this->assertSame('src/Test.php', $result->errors[0]['file']);
+        $this->assertSame(10, $result->errors[0]['line']);
+        $this->assertSame('Error message 1', $result->errors[0]['message']);
+        $this->assertTrue($result->errors[0]['ignorable']);
 
-        $this->assertSame('src/Test.php', $result->errors[1]->file);
-        $this->assertSame(20, $result->errors[1]->line);
-        $this->assertSame('Error message 2', $result->errors[1]->message);
-        $this->assertFalse($result->errors[1]->ignorable);
+        $this->assertSame('src/Test.php', $result->errors[1]['file']);
+        $this->assertSame(20, $result->errors[1]['line']);
+        $this->assertSame('Error message 2', $result->errors[1]['message']);
+        $this->assertFalse($result->errors[1]['ignorable']);
     }
 
     public function testParseMultipleFiles(): void
@@ -110,12 +113,13 @@ class JsonOutputParserTest extends TestCase
             'errors' => [],
         ], \JSON_THROW_ON_ERROR);
 
-        $result = $this->parser->parse($json);
+        $runResult = new RunResult(exitCode: 1, output: $json, errorOutput: '');
+        $result = $this->parser->parse($runResult);
 
         $this->assertSame(3, $result->errorCount);
         $this->assertCount(3, $result->errors);
-        $this->assertSame('src/File1.php', $result->errors[0]->file);
-        $this->assertSame('src/File2.php', $result->errors[1]->file);
-        $this->assertSame('src/File2.php', $result->errors[2]->file);
+        $this->assertSame('src/File1.php', $result->errors[0]['file']);
+        $this->assertSame('src/File2.php', $result->errors[1]['file']);
+        $this->assertSame('src/File2.php', $result->errors[2]['file']);
     }
 }

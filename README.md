@@ -1,276 +1,308 @@
 # PHPStan Extension for Symfony AI Mate
 
-[![CI](https://github.com/matesofmate/phpstan-mate-extension/workflows/CI/badge.svg)](https://github.com/matesofmate/phpstan-mate-extension/actions)
-
-A [Symfony AI Mate](https://symfony.com/doc/current/ai/components/mate.html) extension that provides AI assistants with efficient PHPStan static analysis capabilities, optimized for minimal token consumption.
+Token-optimized PHPStan static analysis tools for AI assistants. This extension provides MCP (Model Context Protocol) tools that execute PHPStan analysis and return results in TOON (Token-Oriented Object Notation) format, achieving ~67% token reduction compared to raw PHPStan JSON output.
 
 ## Features
 
-- **Token-Optimized Output**: TOON format achieves ~67% token reduction vs standard PHPStan JSON output
-- **Git-Aware Analysis**: Analyze only files changed since a git reference (killer feature for AI workflows)
-- **Auto-Configuration**: Automatically detects `phpstan.neon`, `phpstan.neon.dist`, `phpstan.dist.neon`
-- **Fast Single File Analysis**: Quick validation during development
-- **Cache Management**: Clear PHPStan result cache when needed
+- **Static analysis efficiently** - Analyze entire project, specific files, or paths
+- **TOON format output** - ~67% token reduction vs. raw PHPStan JSON output using [helgesverre/toon](https://github.com/HelgeSverre/toon-php)
+- **Multiple output modes** - Choose between toon, summary, detailed, by-file, or by-type formats
+- **Auto-configuration** - Automatically detects `phpstan.neon`, `phpstan.neon.dist`, `phpstan.dist.neon`
+- **Fast execution** - Direct Symfony Process integration with current PHP binary
+- **Message truncation** - Smart message shortening using common package utilities
+
+> **Note**: Git diff analysis tool (`phpstan-analyse-diff`) will be implemented in a future release.
 
 ## Installation
 
 ```bash
-composer require --dev matesofmate/phpstan-mate-extension
+composer require --dev matesofmate/phpstan-extension
 ```
 
-The extension will be automatically discovered by Symfony AI Mate.
+The extension is automatically discovered by Symfony AI Mate.
 
 ## Available Tools
 
-### 1. `phpstan_analyse` - Full Project Analysis
+### `phpstan-analyse`
 
-Run PHPStan static analysis with token-optimized TOON output.
+Run PHPStan static analysis on entire project or specific paths.
 
 **Parameters:**
-- `configuration` (optional): Path to phpstan.neon file
+- `configuration` (optional): Path to phpstan.neon configuration file
 - `level` (optional): Analysis level (0-9)
 - `path` (optional): Specific path to analyze
-- `outputFormat` (optional): Output format - `toon` (default), `summary`, `detailed`, `by-file`, `by-type`
+- `mode` (optional): Output format - `toon` (default), `summary`, `detailed`, `by-file`, `by-type`
 
-**Example:**
-```json
-{
-  "success": true,
-  "output": "summary{level,files_with_errors,total_errors,time}:\n6|4|12|4.892s\n\nerrors[12]{file,line,msg,ignorable}:\nUserService.php|45|$id: int expected, string given|T\nUserService.php|67|getUser(): returns User|null not User|T\n...",
-  "errorCount": 12,
-  "fileErrorCount": 4,
-  "level": 6,
-  "executionTime": 4.892,
-  "memoryUsage": "128MB"
-}
+**Examples:**
+```php
+// Run full analysis
+phpstan_analyse()
+
+// Analyze specific path
+phpstan_analyse(path: "src/Service")
+
+// Use custom level
+phpstan_analyse(level: 8)
+
+// Summary mode for quick overview
+phpstan_analyse(mode: "summary")
+
+// Custom configuration
+phpstan_analyse(configuration: "phpstan.custom.neon")
 ```
 
-### 2. `phpstan_analyse_file` - Single File Analysis
+### `phpstan-analyse-file`
 
-Analyze a specific file. Faster than full analysis when working on individual files.
+Run PHPStan analysis on a specific file.
 
 **Parameters:**
 - `file` (required): Path to the file to analyze
+- `configuration` (optional): Path to phpstan.neon configuration file
 - `level` (optional): Analysis level (0-9)
-- `configuration` (optional): Path to phpstan.neon file
+- `mode` (optional): Output format (same as phpstan-analyse)
 
-**Example:**
-```json
-{
-  "success": false,
-  "output": "summary{level,files_with_errors,total_errors,time}:\n6|1|2|0.523s\n\nerrors[2]{file,line,msg,ignorable}:\nUserService.php|45|Missing return type|T\nUserService.php|67|Nullable return type|T",
-  "errorCount": 2,
-  "file": "src/Service/UserService.php",
-  "level": 6
-}
+**Examples:**
+```php
+// Analyze single file
+phpstan_analyse_file("src/Service/UserService.php")
+
+// With custom level
+phpstan_analyse_file("src/Controller/ApiController.php", level: 9)
+
+// Detailed mode with full messages
+phpstan_analyse_file("src/Repository/UserRepository.php", mode: "detailed")
 ```
 
-### 3. `phpstan_analyse_diff` - Git Diff Analysis (⭐ Killer Feature)
+### `phpstan-clear-cache`
 
-Run PHPStan only on files changed since a git reference (default: main/master). Ideal for validating current work without analyzing the entire codebase.
+Clear PHPStan result cache to force fresh analysis.
 
 **Parameters:**
-- `baseRef` (optional): Git reference (default: auto-detects main/master)
-- `level` (optional): Analysis level (0-9)
-- `configuration` (optional): Path to phpstan.neon file
+- `configuration` (optional): Path to phpstan.neon configuration file
 
-**Example:**
-```json
-{
-  "success": true,
-  "output": "summary{base,changed_files,errors}:\nmain|3|0\n\nchanged_files[3]:\nsrc/Service/NewFeature.php\nsrc/Controller/NewController.php\ntests/NewFeatureTest.php\n\nstatus:OK - No errors found in changed files",
-  "errorCount": 0,
-  "filesAnalysed": 3,
-  "baseRef": "main",
-  "changedFiles": ["src/Service/NewFeature.php", "src/Controller/NewController.php", "tests/NewFeatureTest.php"]
-}
+**Examples:**
+```php
+// Clear cache with default configuration
+phpstan_clear_cache()
+
+// Clear cache for custom configuration
+phpstan_clear_cache(configuration: "phpstan.custom.neon")
 ```
 
-### 4. `phpstan_clear_cache` - Cache Management
+## Output Format (TOON)
 
-Clear PHPStan result cache to force fresh analysis. Use when analysis results seem stale or after major code changes.
+TOON (Token-Oriented Object Notation) provides minimal token usage while maintaining readability:
 
-**Parameters:**
-- `configuration` (optional): Path to phpstan.neon file
+**Successful analysis:**
+```
+summary:
+  level: 6
+  files_with_errors: 0
+  total_errors: 0
+  time: 3.421s
 
-**Example:**
-```json
-{
-  "success": true,
-  "message": "PHPStan cache cleared successfully"
-}
+status: OK
 ```
 
-## TOON Output Format
-
-TOON (Token-Optimized Output Notation) is a compact format designed to minimize token consumption while preserving essential information.
-
-### Standard TOON Format
-
+**Analysis with errors:**
 ```
-summary{level,files_with_errors,total_errors,time}:
-6|4|12|4.892s
+summary:
+  level: 6
+  files_with_errors: 4
+  total_errors: 12
+  time: 4.892s
 
-errors[12]{file,line,msg,ignorable}:
-UserService.php|45|$id: int expected, string given|T
-UserService.php|67|getUser(): returns User|null not User|T
-ApiController.php|23|Undefined property $request|F
-OrderRepo.php|34|findByStatus() undefined method|T
-...
+errors:
+  - file: UserService.php
+    line: 45
+    message: $id: int expected, string given
+    ignorable: true
+  - file: UserService.php
+    line: 67
+    message: getUser(): returns User|null not User
+    ignorable: true
+  - file: ApiController.php
+    line: 23
+    message: Access to undefined property
+    ignorable: false
 ```
-
-### Token Efficiency Comparison
-
-| Output Format | Token Count | Reduction |
-|---------------|-------------|-----------|
-| PHPStan JSON  | ~450 tokens | Baseline  |
-| TOON Format   | ~150 tokens | **67%**   |
-| Summary Mode  | ~50 tokens  | **89%**   |
 
 ### Output Modes
 
-- **`toon`** (default): Balanced format with errors and file/line info
-- **`summary`**: Ultra-compact with just numbers and status
-- **`detailed`**: Includes fix hints for each error
-- **`by-file`**: Groups errors by file
-- **`by-type`**: Groups errors by error type (missing-type, nullable-return, etc.)
+The extension supports multiple output modes via the `mode` parameter:
 
-## Resources
+- **`toon` (default)**: Balanced format with full context (file basenames, line numbers, messages)
+- **`summary`**: Ultra-compact with just totals and status (~89% token reduction)
+- **`detailed`**: Full file paths and complete error messages
+- **`by-file`**: Groups errors by file for easier navigation
+- **`by-type`**: Groups errors by category (missing-type, nullable-return, undefined-property, etc.)
 
-### `phpstan://config` - PHPStan Configuration
+**Example - Summary mode:**
+```
+files_with_errors: 4
+total_errors: 12
+level: 6
+status: FAIL
+```
 
-Provides information about the project's PHPStan configuration.
+**Example - By-type mode:**
+```
+summary:
+  total_errors: 12
 
-**Returns:**
+by_type:
+  missing-type:
+    - file: UserService.php
+      line: 45
+      message: Property $name has no type
+  nullable-return:
+    - file: Repository.php
+      line: 67
+      message: Method should return User|null
+  undefined-property:
+    - file: Controller.php
+      line: 23
+      message: Access to undefined property
+```
+
+### Token Efficiency
+
+Compared to standard PHPStan JSON output:
+
+**JSON (~450 tokens):**
 ```json
 {
-  "project_root": "/path/to/project",
-  "config_file": "/path/to/project/phpstan.neon",
-  "config_exists": true,
-  "configured_level": 6,
-  "config_content": "parameters:\n    level: 6\n    paths:\n        - src\n"
+  "totals": {
+    "errors": 12,
+    "file_errors": 4
+  },
+  "files": {
+    "src/Service/UserService.php": {
+      "messages": [
+        {
+          "message": "Parameter $id of method UserService::findById() has no type.",
+          "line": 45,
+          "ignorable": true
+        }
+      ]
+    }
+  }
 }
 ```
 
-## Use Cases
-
-### For AI Assistants
-
-**Quick validation during development:**
+**TOON (~150 tokens - 67% reduction):**
 ```
-AI: I'll validate this file with PHPStan.
-Tool: phpstan_analyse_file
-Result: 2 errors found - missing return types
-```
+summary:
+  level: 6
+  files_with_errors: 4
+  total_errors: 12
 
-**Git-aware validation (recommended):**
-```
-AI: Let me check only the files you've changed.
-Tool: phpstan_analyse_diff
-Result: Analyzed 3 changed files - all clear!
+errors:
+  - file: UserService.php
+    line: 45
+    message: $id: int expected
+    ignorable: true
 ```
 
-**Full project analysis:**
-```
-AI: Running full PHPStan analysis on your project.
-Tool: phpstan_analyse
-Result: Found 12 errors across 4 files
-```
+## How It Works
 
-### Integration with AI Workflows
+### Architecture
 
-The extension is optimized for AI-assisted development:
+The extension uses a layered architecture:
 
-1. **Fast Feedback**: Git diff analysis provides quick validation of current work
-2. **Token Efficient**: TOON format minimizes token usage in AI context windows
-3. **Auto-Configuration**: No manual setup required, works out of the box
-4. **Smart Truncation**: Long error messages are intelligently shortened
+1. **Runner Layer** - Executes PHPStan via Symfony Process (uses current PHP binary)
+2. **Parser Layer** - Extracts structured data from PHPStan JSON output
+3. **Formatter Layer** - Converts results to TOON format using helgesverre/toon
+4. **Tools Layer** - MCP tools with `#[McpTool]` attributes
 
-## Architecture
-
-### Components
+### Process Flow
 
 ```
-src/
-├── Capability/          # MCP tools and resources
-│   ├── AnalyseTool.php
-│   ├── AnalyseFileTool.php
-│   ├── AnalyseDiffTool.php
-│   ├── ClearCacheTool.php
-│   └── ConfigResource.php
-├── Runner/              # PHPStan execution
-│   ├── PhpStanRunner.php
-│   └── ProcessExecutor.php
-├── Parser/              # Output parsing
-│   ├── JsonOutputParser.php
-│   ├── ConfigurationDetector.php
-│   └── NeonParser.php
-├── Formatter/           # TOON formatting
-│   ├── ToonFormatter.php
-│   ├── MessageTruncator.php
-│   └── ErrorGrouper.php
-├── Git/                 # Git integration
-│   └── DiffAnalyser.php
-└── DTO/                 # Data transfer objects
-    ├── AnalysisResult.php
-    ├── ErrorMessage.php
-    └── ProcessResult.php
+User Request
+    ↓
+MCP Tool (AnalyseTool, AnalyseFileTool, etc.)
+    ↓
+PhpStanRunner (Symfony Process with current PHP binary + PHPStan)
+    ↓
+PHPStan JSON Output
+    ↓
+JsonOutputParser (Extract errors, summary, with message truncation)
+    ↓
+ToonFormatter (Convert to TOON format)
+    ↓
+Return to AI Assistant
 ```
 
-### Design Principles
+### PHP Binary Detection
 
-- **Token Efficiency**: All output formats optimized for minimal token consumption
-- **Smart Defaults**: Auto-detects configuration, git branch, and analysis scope
-- **PHP Binary Usage**: Uses current PHP binary (PHP_BINARY) for consistent execution
-- **Layered Architecture**: Clear separation between execution, parsing, and formatting
+The extension automatically uses the same PHP binary that's currently running (`PHP_BINARY`), ensuring consistency between your environment and analysis execution.
+
+### Message Truncation
+
+Error messages are intelligently truncated using the shared `MessageTruncator` from the common package:
+- Removes common prefixes ("Parameter ", "Method ", "Property ", etc.)
+- Shortens fully-qualified class names
+- Limits message length while preserving essential information
+
+## Resources
+
+### `phpstan://config`
+
+Provides PHPStan project configuration details in TOON format.
+
+**Returns:**
+```
+project_root: /path/to/project
+config_file: /path/to/project/phpstan.neon.dist
+config_exists: true
+configured_level: 6
+config_content: |
+  parameters:
+      level: 6
+      paths:
+          - src
+```
 
 ## Development
 
-### Running Tests
+### Quality Commands
 
 ```bash
-# Run all tests
+# Run tests
 composer test
 
-# With coverage
-composer test -- --coverage-html coverage/
-
-# Run specific test
-vendor/bin/phpunit tests/Runner/PhpStanRunnerTest.php
-```
-
-### Code Quality
-
-```bash
-# Run all quality checks
+# Check code quality (PHPStan level 8, PHP CS Fixer, Rector)
 composer lint
 
-# Auto-fix code style
+# Auto-fix code style and apply refactorings
 composer fix
-
-# Individual tools
-vendor/bin/php-cs-fixer fix --dry-run --diff
-vendor/bin/phpstan analyse
-vendor/bin/rector process --dry-run
 ```
 
-### Quality Standards
+### Testing
 
-- **PHP 8.2+** required
-- **PHPStan Level 8** (maximum strictness)
-- **Symfony Code Style** via PHP CS Fixer
-- **Rector** for automated refactoring to modern PHP
+The extension includes comprehensive tests:
+
+- Unit tests for all core components
+- Integration tests for tool execution
+- PHPStan level 8 compliance
+- PHP CS Fixer code style enforcement
+- Rector PHP 8.2+ modernization
+
+### CI/CD
+
+GitHub Actions automatically runs on every push and pull request:
+- **Lint**: Validates composer.json, runs Rector, PHP CS Fixer, PHPStan
+- **Test**: Runs PHPUnit on PHP 8.2 and 8.3
+
+## Requirements
+
+- PHP 8.2 or higher
+- PHPStan 2.0 or higher (installed in your project)
+- Symfony AI Mate 0.1 or higher
 
 ## Contributing
 
-Contributions are welcome! Please:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (keep commits clean, no AI attribution)
-4. Run quality checks (`composer lint && composer test`)
-5. Push to your branch
-6. Open a Pull Request
+Contributions are welcome! Please see [CONTRIBUTING.md](../github/CONTRIBUTING.md) for details.
 
 ### Commit Message Convention
 
@@ -285,15 +317,15 @@ Short summary (50 chars or less)
 
 ## License
 
-MIT License. See [LICENSE](LICENSE) file for details.
-
-## Credits
-
-Built with 🤝 by the [MatesOfMate](https://github.com/matesofmate) community.
+MIT License - see [LICENSE](LICENSE) file for details.
 
 ## Resources
 
 - [Symfony AI Mate Documentation](https://symfony.com/doc/current/ai/components/mate.html)
 - [PHPStan Documentation](https://phpstan.org/)
-- [MatesOfMate GitHub](https://github.com/matesofmate)
-- [Contributing Guide](https://github.com/matesofmate/.github/blob/main/CONTRIBUTING.md)
+- [TOON Format Specification](https://github.com/HelgeSverre/toon-php)
+- [MatesOfMate Organization](https://github.com/matesofmate)
+
+---
+
+*Built with the MatesOfMate community*
