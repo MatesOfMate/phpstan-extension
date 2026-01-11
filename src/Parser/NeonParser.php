@@ -34,13 +34,11 @@ class NeonParser
             return [];
         }
 
-        // Simple MVP implementation - parse basic key-value pairs
         $data = [];
         $lines = explode("\n", $content);
 
         foreach ($lines as $line) {
             $line = trim($line);
-            // Skip comments and empty lines
             if ('' === $line) {
                 continue;
             }
@@ -48,12 +46,10 @@ class NeonParser
                 continue;
             }
 
-            // Parse simple key: value pairs
             if (preg_match('/^(\w+):\s*(.+)$/', $line, $matches)) {
                 $key = $matches[1];
                 $value = trim($matches[2]);
 
-                // Handle quoted strings
                 if ((str_starts_with($value, '"') && str_ends_with($value, '"'))
                     || (str_starts_with($value, "'") && str_ends_with($value, "'"))) {
                     $value = substr($value, 1, -1);
@@ -71,7 +67,6 @@ class NeonParser
      */
     public function getValue(array $data, string $key): mixed
     {
-        // Support dot-notation for nested keys
         $keys = explode('.', $key);
         $value = $data;
 

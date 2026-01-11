@@ -24,25 +24,25 @@ class ClearCacheToolTest extends TestCase
     {
         $runner = $this->createMock(PhpStanRunner::class);
         $runner->expects($this->once())
-            ->method('clearCache')
-            ->with(null);
+            ->method('run')
+            ->with('clear-result-cache', []);
 
         $tool = new ClearCacheTool($runner);
         $result = $tool->execute();
 
-        $this->assertSame('PHPStan cache cleared successfully', $result);
+        $this->assertSame('PHPStan cache cleared successfully.', $result);
     }
 
     public function testExecutePassesConfigurationToRunner(): void
     {
         $runner = $this->createMock(PhpStanRunner::class);
         $runner->expects($this->once())
-            ->method('clearCache')
-            ->with('custom.neon');
+            ->method('run')
+            ->with('clear-result-cache', ['--configuration', 'custom.neon']);
 
         $tool = new ClearCacheTool($runner);
         $result = $tool->execute(configuration: 'custom.neon');
 
-        $this->assertSame('PHPStan cache cleared successfully', $result);
+        $this->assertSame('PHPStan cache cleared successfully.', $result);
     }
 }

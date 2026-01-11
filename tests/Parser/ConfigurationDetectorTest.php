@@ -11,7 +11,7 @@
 
 namespace MatesOfMate\PhpStan\Tests\Parser;
 
-use MatesOfMate\PhpStan\Parser\ConfigurationDetector;
+use MatesOfMate\PhpStan\Config\ConfigurationDetector;
 use PHPUnit\Framework\TestCase;
 
 class ConfigurationDetectorTest extends TestCase

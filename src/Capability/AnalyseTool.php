@@ -11,9 +11,12 @@
 
 namespace MatesOfMate\PhpStan\Capability;
 
+use MatesOfMate\PhpStan\Config\ConfigurationDetector;
 use MatesOfMate\PhpStan\Formatter\ToonFormatter;
+use MatesOfMate\PhpStan\Parser\JsonOutputParser;
 use MatesOfMate\PhpStan\Runner\PhpStanRunner;
 use Mcp\Capability\Attribute\McpTool;
+use Mcp\Capability\Attribute\Schema;
 
 /**
  * Runs PHPStan static analysis with token-optimized output.
@@ -22,35 +25,50 @@ use Mcp\Capability\Attribute\McpTool;
  */
 class AnalyseTool
 {
+    use BuildsPhpstanArguments;
+
     public function __construct(
         private readonly PhpStanRunner $runner,
+        private readonly JsonOutputParser $parser,
         private readonly ToonFormatter $formatter,
+        private readonly ConfigurationDetector $configDetector,
     ) {
     }
 
     #[McpTool(
         name: 'phpstan-analyse',
-        description: 'Run PHPStan static analysis with token-optimized TOON output. Use for: checking code quality, finding type errors, validating changes. Auto-detects configuration. Returns structured analysis results with error details.',
+        description: 'Run PHPStan static analysis with token-optimized TOON output. Available modes: "toon" (compact format), "summary" (totals only), "detailed" (full messages), "by-file" (grouped by file), "by-type" (grouped by error type). Use for: checking code quality, finding type errors, validating changes.',
     )]
     public function execute(
+        #[Schema(
+            description: 'Path to PHPStan configuration file (defaults to auto-detection)'
+        )]
         ?string $configuration = null,
+        #[Schema(
+            description: 'PHPStan rule level (0-9, higher is stricter)',
+            minimum: 0,
+            maximum: 9
+        )]
         ?int $level = null,
+        #[Schema(
+            description: 'Path or directory to analyze (defaults to configured paths)'
+        )]
         ?string $path = null,
-        string $outputFormat = 'toon',
+        #[Schema(
+            description: 'Output format mode',
+            enum: ['toon', 'summary', 'detailed', 'by-file', 'by-type']
+        )]
+        string $mode = 'toon',
     ): string {
-        $options = [];
-        if (null !== $configuration) {
-            $options['configuration'] = $configuration;
-        }
-        if (null !== $level) {
-            $options['level'] = $level;
-        }
-        if (null !== $path) {
-            $options['path'] = $path;
-        }
+        $args = $this->buildPhpstanArgs(
+            path: $path,
+            configuration: $configuration,
+            level: $level,
+        );
 
-        $result = $this->runner->analyse($options);
+        $runResult = $this->runner->run('analyse', $args);
+        $analysisResult = $this->parser->parse($runResult);
 
-        return $this->formatter->format($result, $outputFormat);
+        return $this->formatter->format($analysisResult, $mode);
     }
 }

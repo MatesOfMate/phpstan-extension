@@ -12,7 +12,7 @@
 namespace MatesOfMate\PhpStan\Tests\Capability;
 
 use MatesOfMate\PhpStan\Capability\ConfigResource;
-use MatesOfMate\PhpStan\Parser\ConfigurationDetector;
+use MatesOfMate\PhpStan\Config\ConfigurationDetector;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -45,7 +45,7 @@ class ConfigResourceTest extends TestCase
         $this->assertSame('phpstan://config', $config['uri']);
     }
 
-    public function testGetConfigurationReturnsJsonMimeType(): void
+    public function testGetConfigurationReturnsToonMimeType(): void
     {
         $detector = $this->createMock(ConfigurationDetector::class);
         $detector->method('detect')->willReturn(null);
@@ -53,7 +53,7 @@ class ConfigResourceTest extends TestCase
         $resource = new ConfigResource($detector);
         $config = $resource->getConfiguration();
 
-        $this->assertSame('application/json', $config['mimeType']);
+        $this->assertSame('text/plain', $config['mimeType']);
     }
 
     public function testGetConfigurationIncludesConfigPathWhenFound(): void
@@ -65,10 +65,9 @@ class ConfigResourceTest extends TestCase
         $resource = new ConfigResource($detector);
         $config = $resource->getConfiguration();
 
-        $data = json_decode($config['text'], true, 512, \JSON_THROW_ON_ERROR);
-
-        $this->assertTrue($data['config_exists']);
-        $this->assertSame('/path/to/phpstan.neon', $data['config_file']);
-        $this->assertSame(6, $data['configured_level']);
+        // TOON format is human-readable text, just check it contains expected values
+        $this->assertStringContainsString('config_exists', $config['text']);
+        $this->assertStringContainsString('/path/to/phpstan.neon', $config['text']);
+        $this->assertStringContainsString('6', $config['text']);
     }
 }

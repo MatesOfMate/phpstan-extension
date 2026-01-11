@@ -12,9 +12,12 @@
 namespace MatesOfMate\PhpStan\Tests\Capability;
 
 use MatesOfMate\PhpStan\Capability\AnalyseTool;
+use MatesOfMate\PhpStan\Config\ConfigurationDetector;
 use MatesOfMate\PhpStan\Formatter\ToonFormatter;
-use MatesOfMate\PhpStan\Runner\AnalysisResult;
+use MatesOfMate\PhpStan\Parser\AnalysisResult;
+use MatesOfMate\PhpStan\Parser\JsonOutputParser;
 use MatesOfMate\PhpStan\Runner\PhpStanRunner;
+use MatesOfMate\PhpStan\Runner\RunResult;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -24,19 +27,19 @@ class AnalyseToolTest extends TestCase
 {
     public function testExecuteRunsAnalysisAndReturnsFormattedOutput(): void
     {
-        $analysisResult = new AnalysisResult(
-            errorCount: 0,
-            fileErrorCount: 0,
-            errors: [],
-            level: 6,
-            executionTime: 1.5,
-            memoryUsage: '64MB',
-        );
+        $runResult = new RunResult(0, '{"totals":{"file_errors":0},"files":{}}', '');
+        $analysisResult = new AnalysisResult(0, 0, [], 6, 1.5, '64MB');
 
         $runner = $this->createMock(PhpStanRunner::class);
         $runner->expects($this->once())
-            ->method('analyse')
-            ->with($this->callback(fn ($options): bool => [] === $options))
+            ->method('run')
+            ->with('analyse', [])
+            ->willReturn($runResult);
+
+        $parser = $this->createMock(JsonOutputParser::class);
+        $parser->expects($this->once())
+            ->method('parse')
+            ->with($runResult)
             ->willReturn($analysisResult);
 
         $formatter = $this->createMock(ToonFormatter::class);
@@ -45,7 +48,10 @@ class AnalyseToolTest extends TestCase
             ->with($analysisResult, 'toon')
             ->willReturn('formatted output');
 
-        $tool = new AnalyseTool($runner, $formatter);
+        $configDetector = $this->createMock(ConfigurationDetector::class);
+        $configDetector->method('detect')->willReturn(null);
+
+        $tool = new AnalyseTool($runner, $parser, $formatter, $configDetector);
         $result = $tool->execute();
 
         $this->assertSame('formatted output', $result);
@@ -53,61 +59,86 @@ class AnalyseToolTest extends TestCase
 
     public function testExecutePassesConfigurationToRunner(): void
     {
+        $runResult = new RunResult(0, '{"totals":{"file_errors":0},"files":{}}', '');
         $analysisResult = new AnalysisResult(0, 0, [], null, null, null);
 
         $runner = $this->createMock(PhpStanRunner::class);
         $runner->expects($this->once())
-            ->method('analyse')
-            ->with($this->callback(fn ($options): bool => isset($options['configuration']) && 'phpstan.neon' === $options['configuration']))
-            ->willReturn($analysisResult);
+            ->method('run')
+            ->with('analyse', ['--configuration', 'phpstan.neon'])
+            ->willReturn($runResult);
+
+        $parser = $this->createMock(JsonOutputParser::class);
+        $parser->method('parse')->willReturn($analysisResult);
 
         $formatter = $this->createMock(ToonFormatter::class);
         $formatter->method('format')->willReturn('output');
 
-        $tool = new AnalyseTool($runner, $formatter);
+        $configDetector = $this->createMock(ConfigurationDetector::class);
+        $configDetector->method('detect')->willReturn(null);
+
+        $tool = new AnalyseTool($runner, $parser, $formatter, $configDetector);
         $tool->execute(configuration: 'phpstan.neon');
     }
 
     public function testExecutePassesLevelToRunner(): void
     {
+        $runResult = new RunResult(0, '{"totals":{"file_errors":0},"files":{}}', '');
         $analysisResult = new AnalysisResult(0, 0, [], null, null, null);
 
         $runner = $this->createMock(PhpStanRunner::class);
         $runner->expects($this->once())
-            ->method('analyse')
-            ->with($this->callback(fn ($options): bool => isset($options['level']) && 8 === $options['level']))
-            ->willReturn($analysisResult);
+            ->method('run')
+            ->with('analyse', ['--level', '8'])
+            ->willReturn($runResult);
+
+        $parser = $this->createMock(JsonOutputParser::class);
+        $parser->method('parse')->willReturn($analysisResult);
 
         $formatter = $this->createMock(ToonFormatter::class);
         $formatter->method('format')->willReturn('output');
 
-        $tool = new AnalyseTool($runner, $formatter);
+        $configDetector = $this->createMock(ConfigurationDetector::class);
+        $configDetector->method('detect')->willReturn(null);
+
+        $tool = new AnalyseTool($runner, $parser, $formatter, $configDetector);
         $tool->execute(level: 8);
     }
 
     public function testExecutePassesPathToRunner(): void
     {
+        $runResult = new RunResult(0, '{"totals":{"file_errors":0},"files":{}}', '');
         $analysisResult = new AnalysisResult(0, 0, [], null, null, null);
 
         $runner = $this->createMock(PhpStanRunner::class);
         $runner->expects($this->once())
-            ->method('analyse')
-            ->with($this->callback(fn ($options): bool => isset($options['path']) && 'src/' === $options['path']))
-            ->willReturn($analysisResult);
+            ->method('run')
+            ->with('analyse', ['src/'])
+            ->willReturn($runResult);
+
+        $parser = $this->createMock(JsonOutputParser::class);
+        $parser->method('parse')->willReturn($analysisResult);
 
         $formatter = $this->createMock(ToonFormatter::class);
         $formatter->method('format')->willReturn('output');
 
-        $tool = new AnalyseTool($runner, $formatter);
+        $configDetector = $this->createMock(ConfigurationDetector::class);
+        $configDetector->method('detect')->willReturn(null);
+
+        $tool = new AnalyseTool($runner, $parser, $formatter, $configDetector);
         $tool->execute(path: 'src/');
     }
 
     public function testExecuteSupportsMultipleFormatterModes(): void
     {
+        $runResult = new RunResult(0, '{"totals":{"file_errors":0},"files":{}}', '');
         $analysisResult = new AnalysisResult(0, 0, [], null, null, null);
 
         $runner = $this->createMock(PhpStanRunner::class);
-        $runner->method('analyse')->willReturn($analysisResult);
+        $runner->method('run')->willReturn($runResult);
+
+        $parser = $this->createMock(JsonOutputParser::class);
+        $parser->method('parse')->willReturn($analysisResult);
 
         $formatter = $this->createMock(ToonFormatter::class);
         $formatter->expects($this->once())
@@ -115,31 +146,36 @@ class AnalyseToolTest extends TestCase
             ->with($analysisResult, 'summary')
             ->willReturn('summary output');
 
-        $tool = new AnalyseTool($runner, $formatter);
-        $result = $tool->execute(outputFormat: 'summary');
+        $configDetector = $this->createMock(ConfigurationDetector::class);
+        $configDetector->method('detect')->willReturn(null);
+
+        $tool = new AnalyseTool($runner, $parser, $formatter, $configDetector);
+        $result = $tool->execute(mode: 'summary');
 
         $this->assertSame('summary output', $result);
     }
 
     public function testExecutePassesAllParametersToRunner(): void
     {
+        $runResult = new RunResult(0, '{"totals":{"file_errors":0},"files":{}}', '');
         $analysisResult = new AnalysisResult(0, 0, [], null, null, null);
 
         $runner = $this->createMock(PhpStanRunner::class);
         $runner->expects($this->once())
-            ->method('analyse')
-            ->with($this->callback(fn ($options): bool => isset($options['configuration'])
-                && 'phpstan.neon' === $options['configuration']
-                && isset($options['level'])
-                && 8 === $options['level']
-                && isset($options['path'])
-                && 'src/' === $options['path']))
-            ->willReturn($analysisResult);
+            ->method('run')
+            ->with('analyse', ['--configuration', 'phpstan.neon', '--level', '8', 'src/'])
+            ->willReturn($runResult);
+
+        $parser = $this->createMock(JsonOutputParser::class);
+        $parser->method('parse')->willReturn($analysisResult);
 
         $formatter = $this->createMock(ToonFormatter::class);
         $formatter->method('format')->willReturn('output');
 
-        $tool = new AnalyseTool($runner, $formatter);
+        $configDetector = $this->createMock(ConfigurationDetector::class);
+        $configDetector->method('detect')->willReturn(null);
+
+        $tool = new AnalyseTool($runner, $parser, $formatter, $configDetector);
         $tool->execute(
             configuration: 'phpstan.neon',
             level: 8,

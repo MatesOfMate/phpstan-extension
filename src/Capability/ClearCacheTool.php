@@ -28,13 +28,20 @@ class ClearCacheTool
 
     #[McpTool(
         name: 'phpstan-clear-cache',
-        description: 'Clear PHPStan result cache to force fresh analysis. Use when analysis results seem stale or after major code changes, dependency updates, or configuration modifications.',
+        description: 'Clear PHPStan result cache to force fresh analysis. Use for: forcing fresh analysis after stale results, clearing cache after major code changes, resetting analysis state after dependency updates or configuration modifications.',
     )]
     public function execute(
         ?string $configuration = null,
     ): string {
-        $this->runner->clearCache($configuration);
+        $args = [];
 
-        return 'PHPStan cache cleared successfully';
+        if (null !== $configuration) {
+            $args[] = '--configuration';
+            $args[] = $configuration;
+        }
+
+        $this->runner->run('clear-result-cache', $args);
+
+        return 'PHPStan cache cleared successfully.';
     }
 }
