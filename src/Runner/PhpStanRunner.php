@@ -11,9 +11,7 @@
 
 namespace MatesOfMate\PhpStan\Runner;
 
-use MatesOfMate\Common\Process\ProcessExecutor;
 use MatesOfMate\Common\Process\ProcessExecutorInterface;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
  * Executes PHPStan analysis and manages process execution.

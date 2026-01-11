@@ -16,6 +16,7 @@ use MatesOfMate\PhpStan\Formatter\ToonFormatter;
 use MatesOfMate\PhpStan\Parser\JsonOutputParser;
 use MatesOfMate\PhpStan\Runner\PhpStanRunner;
 use Mcp\Capability\Attribute\McpTool;
+use Mcp\Capability\Attribute\Schema;
 
 /**
  * Runs PHPStan analysis on a specific file for quick validation.
@@ -39,9 +40,25 @@ class AnalyseFileTool
         description: 'Run PHPStan analysis on a specific file. Returns token-optimized TOON format. Available modes: "toon" (compact format), "summary" (totals only), "detailed" (full messages). Use for: validating changes to a single file, debugging specific file issues, focused analysis.',
     )]
     public function execute(
+        #[Schema(
+            description: 'Path to the PHP file to analyze (relative to project root)',
+            pattern: '\.php$'
+        )]
         ?string $file = null,
+        #[Schema(
+            description: 'Path to PHPStan configuration file (defaults to auto-detection)'
+        )]
         ?string $configuration = null,
+        #[Schema(
+            description: 'PHPStan rule level (0-9, higher is stricter)',
+            minimum: 0,
+            maximum: 9
+        )]
         ?int $level = null,
+        #[Schema(
+            description: 'Output format mode',
+            enum: ['toon', 'summary', 'detailed']
+        )]
         string $mode = 'toon',
     ): string {
         if (null === $file) {
