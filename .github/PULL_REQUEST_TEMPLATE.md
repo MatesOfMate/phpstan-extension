@@ -1,20 +1,8 @@
-| Q             | A
-| ------------- | ---
-| Bug fix?      | yes/no
-| New feature?  | yes/no
-| BC breaks?    | yes/no
-| Deprecations? | yes/no
-| Tests pass?   | yes/no
-| Issues        | Fix #... <!-- prefix each issue number with "Fix #" -->
-| License       | MIT
+Please do not submit any Pull Requests here. They will be closed.
+---
 
-<!--
-Replace this notice by a description of your feature/bugfix.
-This will help reviewers and should be a good start for the documentation.
+Please submit your PR here instead:
+https://github.com/MatesOfMate/.github
 
-Please ensure:
- - Tests are added/updated and pass (`composer test`)
- - Code quality checks pass (`composer lint`)
- - Documentation is updated if needed
- - For new tools/resources, provide usage examples
--->
+This repository is what we call a "subtree split": a read-only subset of that main repository.
+We're looking forward to your PR there!
