@@ -21,7 +21,7 @@
     "require": {
         "php": ">=8.2",
         "helgesverre/toon": "^1.0",
-        "matesofmate/common": "^0.1@dev",
+        "matesofmate/common": "@dev",
         "phpstan/phpstan": "^2.0",
         "symfony/ai-mate": "^0.1 || ^0.2@dev",
         "symfony/process": "^6.4|^7.0|^8.0"
@@ -73,5 +73,11 @@
         "allow-plugins": {
             "php-http/discovery": true
         }
-    }
+    },
+    "repositories": [
+        {
+            "type": "path",
+            "url": "/Users/johannes/Development/matesofmate/matesofmate-monorepo/src/common"
+        }
+    ]
 }
