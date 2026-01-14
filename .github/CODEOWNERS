@@ -1,0 +1,5 @@
+# CODEOWNERS - Define code ownership for automatic review requests
+# Replace @your-username with your GitHub username
+
+# Default owners for everything in the repo
+* @wachterjohannes @your-username

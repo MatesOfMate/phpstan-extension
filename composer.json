@@ -1,0 +1,67 @@
+{
+    "name": "matesofmate/phpstan-extension",
+    "description": "PHPStan extension for Symfony AI Mate providing AI assistants with efficient static analysis tools",
+    "type": "symfony-ai-mate",
+    "license": "MIT",
+    "keywords": ["symfony", "ai", "mate", "mcp", "ai-assistant", "phpstan", "static-analysis"],
+    "authors": [
+        {
+            "name": "Johannes Wachter",
+            "email": "johannes@sulu.io"
+        }
+    ],
+    "require": {
+        "php": ">=8.2",
+        "helgesverre/toon": "^1.0",
+        "matesofmate/common": "^0.1@dev",
+        "phpstan/phpstan": "^2.0",
+        "symfony/ai-mate": "^0.1 || ^0.2@dev",
+        "symfony/process": "^6.4|^7.0|^8.0"
+    },
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "^3.0",
+        "phpstan/phpstan-phpunit": "^2.0",
+        "phpunit/phpunit": "^10.0",
+        "rector/rector": "^2.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "MatesOfMate\\PhpStan\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "MatesOfMate\\PhpStan\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "ai-mate": {
+            "scan-dirs": [
+                "src/Capability"
+            ],
+            "includes": ["config/config.php"]
+        },
+        "branch-alias": {
+            "dev-main": "0.1.x-dev"
+        }
+    },
+    "scripts": {
+        "test": "vendor/bin/phpunit",
+        "lint": [
+            "@composer validate --strict",
+            "vendor/bin/rector process --dry-run",
+            "vendor/bin/php-cs-fixer fix --dry-run --diff",
+            "vendor/bin/phpstan analyse"
+        ],
+        "fix": [
+            "vendor/bin/rector process",
+            "vendor/bin/php-cs-fixer fix"
+        ]
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "php-http/discovery": true
+        }
+    }
+}
