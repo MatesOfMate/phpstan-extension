@@ -3,7 +3,15 @@
     "description": "PHPStan extension for Symfony AI Mate providing AI assistants with efficient static analysis tools",
     "type": "symfony-ai-mate",
     "license": "MIT",
-    "keywords": ["symfony", "ai", "mate", "mcp", "ai-assistant", "phpstan", "static-analysis"],
+    "keywords": [
+        "symfony",
+        "ai",
+        "mate",
+        "mcp",
+        "ai-assistant",
+        "phpstan",
+        "static-analysis"
+    ],
     "authors": [
         {
             "name": "Johannes Wachter",
@@ -39,7 +47,9 @@
             "scan-dirs": [
                 "src/Capability"
             ],
-            "includes": ["config/config.php"]
+            "includes": [
+                "config/config.php"
+            ]
         },
         "branch-alias": {
             "dev-main": "0.1.x-dev"
