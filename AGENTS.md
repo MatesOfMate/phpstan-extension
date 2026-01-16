@@ -1,14 +1,107 @@
-# AGENTS.md
+# AGENTS.md - Multi-Agent Guidelines
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Guidelines for AI agents working on the PHPStan extension for Symfony AI Mate.
 
-## Project Overview
+## Agent Role
 
-PHPStan extension for Symfony AI Mate providing AI assistants with efficient static analysis tools. This extension executes PHPStan analysis and returns results in TOON (Token-Oriented Object Notation) format, achieving ~67% token reduction compared to raw PHPStan JSON output.
+When assisting with this repository, you are helping maintain and extend an **MCP extension** that provides PHPStan static analysis tools for AI assistants.
 
-## Common Commands
+## Key Responsibilities
 
-### Development Workflow
+### 1. Tool Development
+Assist with creating and maintaining MCP capabilities:
+- Tools: Executable actions marked with `#[McpTool]`
+- Resources: Static context data marked with `#[McpResource]`
+- Service registration in `config/config.php`
+- Comprehensive tests in `tests/`
+
+### 2. Quality Assurance
+Ensure code meets standards:
+- Run `composer lint` before commits
+- Run `composer test` to verify functionality
+- Check that all JSON uses `\JSON_THROW_ON_ERROR | \JSON_PRETTY_PRINT`
+- Verify proper file headers are present
+
+### 3. Documentation Support
+Help maintain clear documentation:
+- Update README.md with new tools or features
+- Document tool capabilities and when AI should use them
+- Provide usage examples for end users
+
+## Multi-Agent Coordination
+
+When multiple agents work on this project simultaneously:
+
+### File Ownership
+- Each agent should claim files before modifying them
+- Wait for acknowledgment before making changes
+- Release files when done
+
+### Communication Pattern
+```
+Agent A: "Claiming src/Capability/AnalyseTool.php for modification"
+Agent B: "Acknowledged, will avoid that file"
+Agent A: "Releasing src/Capability/AnalyseTool.php - changes complete"
+```
+
+## Code Standards
+
+### Code Style Conventions
+- **No** `declare(strict_types=1)` - Omitted by design
+- **No** `final` classes - Allow extensibility
+- All JSON encoding uses `\JSON_THROW_ON_ERROR | \JSON_PRETTY_PRINT`
+- File headers include MatesOfMate copyright
+
+### Tool Implementation Checklist
+When creating new tools:
+- [ ] Clear, descriptive `#[McpTool]` name: `phpstan-{action}`
+- [ ] Helpful description explaining when AI should use it
+- [ ] Returns TOON-formatted string via ToonFormatter
+- [ ] Supports `mode` parameter for output modes
+- [ ] Use `BuildsPhpstanArguments` trait if needed
+- [ ] Registered in `config/config.php`
+- [ ] Has corresponding test in `tests/Capability/`
+- [ ] Test validates output structure
+
+### Resource Implementation Checklist
+When creating new resources:
+- [ ] Custom URI scheme: `phpstan://path`
+- [ ] Descriptive name: `phpstan_{name}`
+- [ ] Returns array with `uri`, `mimeType`, `text` keys
+- [ ] `text` value is JSON string
+- [ ] Registered in `config/config.php`
+- [ ] Has corresponding test validating structure
+
+## Workflow Guidelines
+
+### When Adding New Tools
+1. Discuss tool purpose and when AI should use it
+2. Create class in `src/Capability/`
+3. Add `#[McpTool]` attribute with clear description
+4. Inject PhpStanRunner, parsers, and ToonFormatter
+5. Implement method returning TOON format
+6. Register in `config/config.php`
+7. Create test validating behavior
+8. Run quality checks
+
+### When Modifying Parser
+1. Add method to `JsonOutputParser`
+2. Update `AnalysisResult` if new fields needed
+3. Add test to parser tests
+4. Update formatter if needed
+
+### When Modifying Output Format
+1. Update `ToonFormatter` methods
+2. Update `ToonFormatterTest`
+3. Document changes in README
+
+### When Adding Output Modes
+1. Add mode to enum in `#[Schema]` attribute on tool parameters
+2. Implement format method in `ToonFormatter` (e.g., `formatCustomMode()`)
+3. Add match arm in `ToonFormatter::format()` method
+4. Add test case in `ToonFormatterTest`
+
+## Development Commands Reference
 
 ```bash
 # Install dependencies
@@ -17,222 +110,61 @@ composer install
 # Run all tests
 composer test
 
-# Run specific test
-vendor/bin/phpunit tests/Capability/AnalyseToolTest.php
-vendor/bin/phpunit --filter testExecute
-
-# Check code quality (validates composer.json, runs Rector, PHP CS Fixer, PHPStan)
+# Check all quality tools
 composer lint
 
-# Auto-fix code style and apply automated refactorings
+# Auto-fix code style and refactoring
 composer fix
-```
 
-### Individual Quality Tools
-
-```bash
-# PHP CS Fixer (code style)
-vendor/bin/php-cs-fixer fix --dry-run --diff  # Check only
-vendor/bin/php-cs-fixer fix                   # Apply fixes
-
-# PHPStan (static analysis at level 8)
+# Individual tools
 vendor/bin/phpstan analyse
-
-# Rector (automated refactoring to PHP 8.2)
-vendor/bin/rector process --dry-run           # Preview changes
-vendor/bin/rector process                     # Apply changes
+vendor/bin/php-cs-fixer fix --dry-run --diff
+vendor/bin/rector process --dry-run
+vendor/bin/phpunit tests/Capability/AnalyseToolTest.php
 ```
 
-## Architecture
+## Common Mistakes to Prevent
 
-### Component Structure
+### Don't
+- Don't add `declare(strict_types=1)` to PHP files
+- Don't make classes `final`
+- Don't use `json_encode()` without error flags
+- Don't forget to register new capabilities in `config/config.php`
+- Don't skip tests
+- Don't use generic tool descriptions
 
-**MCP Tools** (`src/Capability/`):
-- `AnalyseTool` - Run PHPStan analysis on project or specific paths
-- `AnalyseFileTool` - Quick validation of single files
-- `ClearCacheTool` - Clear PHPStan result cache
-- `BuildsPhpstanArguments` (trait) - Shared argument building logic
+### Do
+- Keep classes extensible (non-final)
+- Use `\JSON_THROW_ON_ERROR | \JSON_PRETTY_PRINT` for JSON encoding
+- Write specific, actionable tool descriptions
+- Register all capabilities in service container
+- Test all tools and resources
+- Run `composer lint` before committing
 
-**MCP Resources** (`src/Capability/`):
-- `ConfigResource` - Provides PHPStan configuration information (path, level, content)
+## Quality Gates
 
-**Core Services**:
-- `Runner/PhpStanRunner` - Executes PHPStan CLI commands via ProcessExecutor
-- `Parser/JsonOutputParser` - Parses PHPStan JSON output into structured AnalysisResult
-- `Parser/NeonParser` - Extracts configuration level from .neon files
-- `Formatter/ToonFormatter` - Converts results to TOON format with multiple modes
-- `Config/ConfigurationDetector` - Auto-detects phpstan.neon/phpstan.neon.dist/phpstan.dist.neon
+Before submitting changes:
+1. `composer lint` passes
+2. `composer test` passes
+3. New code has tests
+4. Documentation updated if needed
 
-### Data Flow
+## Commit Message Guidelines
 
+**CRITICAL**: Never include AI attribution in commit messages.
+
+### Format
 ```
-Tool → PhpStanRunner → ProcessExecutor (common package)
-                                ↓
-                         PHPStan CLI with --error-format=json
-                                ↓
-                         JsonOutputParser → AnalysisResult
-                                ↓
-                         ToonFormatter → TOON output
-```
+Short descriptive summary
 
-### Output Modes
-
-The ToonFormatter supports five output modes:
-- `toon` - Compact format with basename files only (~67% token reduction)
-- `summary` - Totals only (files_with_errors, total_errors, level, status)
-- `detailed` - Full file paths and complete error messages
-- `by-file` - Errors grouped by filename
-- `by-type` - Errors categorized by type (missing-type, type-mismatch, undefined-method, etc.)
-
-### Common Package Integration
-
-Uses `matesofmate/common` package for shared functionality:
-
-**ProcessExecutor** - CLI tool execution with PHP binary reuse
-- Configured with vendor path: `%mate.root_dir%/vendor/bin/phpstan`
-- Default timeout: 300 seconds
-- Always uses `--error-format=json --no-progress` for analyse command
-
-**MessageTruncator** - Smart message shortening (200 char limit)
-- Preserves common prefixes: "Parameter ", "Method ", "Property ", "Call to ", etc.
-- Applied during JSON parsing to reduce token usage
-
-**ConfigurationDetector** - Auto-detects config files in order:
-1. phpstan.neon
-2. phpstan.neon.dist
-3. phpstan.dist.neon
-
-### Service Registration
-
-All services registered in `config/config.php` with:
-- Autowiring enabled
-- Autoconfiguration enabled (discovers #[McpTool] and #[McpResource] attributes)
-- Custom process executor with vendor path injection
-
-## Code Quality Standards
-
-### PHP Requirements
-- PHP 8.2+ minimum
-- No `declare(strict_types=1)` by convention
-- No final classes (extensibility)
-- JSON encoding: Always use `\JSON_THROW_ON_ERROR | \JSON_PRETTY_PRINT`
-
-### Quality Tools Configuration
-- **PHPStan**: Level 8, includes phpstan-phpunit extension
-- **PHP CS Fixer**: `@Symfony` + `@Symfony:risky` rulesets with ordered class elements
-- **Rector**: PHP 8.2, code quality, dead code removal, early return, type declarations
-- **PHPUnit**: Version 10.0+
-
-### File Header Template
-
-All PHP files must include:
-```php
-<?php
-
-/*
- * This file is part of the MatesOfMate Organisation.
- *
- * (c) Johannes Wachter <johannes@sulu.io>
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
+- Conceptual change or improvement
+- Another concept addressed
 ```
 
-### DocBlock Annotations
-
-**@author annotation**: Required on all class-level DocBlocks:
-```php
-/**
- * Description of the class.
- *
- * @author Johannes Wachter <johannes@sulu.io>
- */
-class YourClass
-```
-
-**@internal annotation**: Mark implementation details not for external use:
-```php
-/**
- * Internal parser for PHPStan JSON output.
- *
- * @internal
- * @author Johannes Wachter <johannes@sulu.io>
- */
-class JsonOutputParser
-```
-
-Use @internal for:
-- Parser, formatter, runner classes
-- Helper traits
-- Internal DTOs (RunResult, AnalysisResult)
-- Classes not intended for extension consumers
-
-## Discovery Mechanism
-
-Symfony AI Mate auto-discovers tools and resources via `composer.json`:
-
-```json
-{
-    "extra": {
-        "ai-mate": {
-            "scan-dirs": ["src/Capability"],
-            "includes": ["config/config.php"]
-        }
-    }
-}
-```
-
-## Testing Philosophy
-
-### Test Structure
-- Tests mirror `src/` structure in `tests/`
-- Extend `PHPUnit\Framework\TestCase`
-- Test method names: `testExecute`, `testFormatToon`, `testParseErrors`, etc.
-
-### Key Testing Areas
-- Tool parameter validation (required file parameter, level range 0-9)
-- JSON output parsing correctness
-- TOON format output validation
-- Configuration detection logic
-- Error categorization in ToonFormatter
-
-### Integration Testing
-- Service registration and dependency injection
-- Attribute-based discovery (#[McpTool], #[McpResource])
-- Process executor integration with common package
-
-## Common Development Patterns
-
-### Adding New Tools
-
-1. Create tool class in `src/Capability/` with `#[McpTool]` attribute
-2. Inject required services via constructor (PhpStanRunner, parsers, formatters)
-3. Use `BuildsPhpstanArguments` trait if needed for argument construction
-4. Register service in `config/config.php`
-5. Add corresponding test in `tests/Capability/`
-
-### Adding New Output Modes
-
-1. Add mode to enum in `#[Schema]` attribute on tool parameters
-2. Implement format method in `ToonFormatter` (e.g., `formatCustomMode()`)
-3. Add match arm in `ToonFormatter::format()` method
-4. Add test case in `ToonFormatterTest`
-
-## Commit Message Convention
-
-Keep commit messages clean without AI attribution.
-
-**Format:**
-```
-Short summary (50 chars or less)
-
-- Conceptual change description
-- Another concept or improvement
-```
-
-**Rules:**
-- ❌ NO AI attribution (no "Co-Authored-By: Claude", etc.)
-- ✅ Short, descriptive summary line
-- ✅ Bullet list describing concepts/improvements
-- ✅ Focus on the WHY and WHAT
+### Rules
+- **NEVER** add "Co-Authored-By: Claude" or similar AI attribution
+- **NEVER** mention "coded by claude-code" or AI assistance
+- Describe CONCEPTS and improvements, not file names
+- Use natural language explaining what changed
+- Keep summary under 50 characters
+- Focus on WHY and WHAT, not technical details
