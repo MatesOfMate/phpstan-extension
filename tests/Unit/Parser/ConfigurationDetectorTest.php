@@ -9,9 +9,9 @@
  * file that was distributed with this source code.
  */
 
-namespace MatesOfMate\PhpStan\Tests\Parser;
+namespace MatesOfMate\PhpStanExtension\Tests\Unit\Parser;
 
-use MatesOfMate\PhpStan\Config\ConfigurationDetector;
+use MatesOfMate\PhpStanExtension\Config\ConfigurationDetector;
 use PHPUnit\Framework\TestCase;
 
 class ConfigurationDetectorTest extends TestCase

@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-namespace MatesOfMate\PhpStan\Parser;
+namespace MatesOfMate\PhpStanExtension\Parser;
 
 /**
  * Represents the result of a PHPStan analysis with errors and metrics.

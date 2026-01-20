@@ -9,9 +9,9 @@
  * file that was distributed with this source code.
  */
 
-namespace MatesOfMate\PhpStan\Capability;
+namespace MatesOfMate\PhpStanExtension\Capability;
 
-use MatesOfMate\PhpStan\Runner\PhpStanRunner;
+use MatesOfMate\PhpStanExtension\Runner\PhpStanRunner;
 use Mcp\Capability\Attribute\McpTool;
 
 /**

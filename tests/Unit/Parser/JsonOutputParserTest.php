@@ -9,10 +9,10 @@
  * file that was distributed with this source code.
  */
 
-namespace MatesOfMate\PhpStan\Tests\Parser;
+namespace MatesOfMate\PhpStanExtension\Tests\Unit\Parser;
 
-use MatesOfMate\PhpStan\Parser\JsonOutputParser;
-use MatesOfMate\PhpStan\Runner\RunResult;
+use MatesOfMate\PhpStanExtension\Parser\JsonOutputParser;
+use MatesOfMate\PhpStanExtension\Runner\RunResult;
 use PHPUnit\Framework\TestCase;
 
 class JsonOutputParserTest extends TestCase

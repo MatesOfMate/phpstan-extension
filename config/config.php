@@ -10,15 +10,15 @@
  */
 
 use MatesOfMate\Common\Process\ProcessExecutor;
-use MatesOfMate\PhpStan\Capability\AnalyseFileTool;
-use MatesOfMate\PhpStan\Capability\AnalyseTool;
-use MatesOfMate\PhpStan\Capability\ClearCacheTool;
-use MatesOfMate\PhpStan\Capability\ConfigResource;
-use MatesOfMate\PhpStan\Config\ConfigurationDetector;
-use MatesOfMate\PhpStan\Formatter\ToonFormatter;
-use MatesOfMate\PhpStan\Parser\JsonOutputParser;
-use MatesOfMate\PhpStan\Parser\NeonParser;
-use MatesOfMate\PhpStan\Runner\PhpStanRunner;
+use MatesOfMate\PhpStanExtension\Capability\AnalyseFileTool;
+use MatesOfMate\PhpStanExtension\Capability\AnalyseTool;
+use MatesOfMate\PhpStanExtension\Capability\ClearCacheTool;
+use MatesOfMate\PhpStanExtension\Capability\ConfigResource;
+use MatesOfMate\PhpStanExtension\Config\ConfigurationDetector;
+use MatesOfMate\PhpStanExtension\Formatter\ToonFormatter;
+use MatesOfMate\PhpStanExtension\Parser\JsonOutputParser;
+use MatesOfMate\PhpStanExtension\Parser\NeonParser;
+use MatesOfMate\PhpStanExtension\Runner\PhpStanRunner;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 
 use function Symfony\Component\DependencyInjection\Loader\Configurator\service;

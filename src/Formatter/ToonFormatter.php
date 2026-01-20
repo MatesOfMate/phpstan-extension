@@ -9,9 +9,9 @@
  * file that was distributed with this source code.
  */
 
-namespace MatesOfMate\PhpStan\Formatter;
+namespace MatesOfMate\PhpStanExtension\Formatter;
 
-use MatesOfMate\PhpStan\Parser\AnalysisResult;
+use MatesOfMate\PhpStanExtension\Parser\AnalysisResult;
 
 /**
  * Formats PHPStan analysis results using TOON (Token-Oriented Object Notation) for token-efficient output.

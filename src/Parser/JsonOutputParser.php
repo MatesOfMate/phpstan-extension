@@ -9,10 +9,10 @@
  * file that was distributed with this source code.
  */
 
-namespace MatesOfMate\PhpStan\Parser;
+namespace MatesOfMate\PhpStanExtension\Parser;
 
 use MatesOfMate\Common\Truncator\MessageTruncator;
-use MatesOfMate\PhpStan\Runner\RunResult;
+use MatesOfMate\PhpStanExtension\Runner\RunResult;
 
 /**
  * Parses PHPStan JSON output into structured data.

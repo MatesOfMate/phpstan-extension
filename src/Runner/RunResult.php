@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-namespace MatesOfMate\PhpStan\Runner;
+namespace MatesOfMate\PhpStanExtension\Runner;
 
 /**
  * Represents the raw result of a PHPStan command execution.

@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-namespace MatesOfMate\PhpStan\Parser;
+namespace MatesOfMate\PhpStanExtension\Parser;
 
 /**
  * Basic NEON configuration file parser for extracting PHPStan settings.

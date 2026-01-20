@@ -9,12 +9,12 @@
  * file that was distributed with this source code.
  */
 
-namespace MatesOfMate\PhpStan\Capability;
+namespace MatesOfMate\PhpStanExtension\Capability;
 
-use MatesOfMate\PhpStan\Config\ConfigurationDetector;
-use MatesOfMate\PhpStan\Formatter\ToonFormatter;
-use MatesOfMate\PhpStan\Parser\JsonOutputParser;
-use MatesOfMate\PhpStan\Runner\PhpStanRunner;
+use MatesOfMate\PhpStanExtension\Config\ConfigurationDetector;
+use MatesOfMate\PhpStanExtension\Formatter\ToonFormatter;
+use MatesOfMate\PhpStanExtension\Parser\JsonOutputParser;
+use MatesOfMate\PhpStanExtension\Runner\PhpStanRunner;
 use Mcp\Capability\Attribute\McpTool;
 use Mcp\Capability\Attribute\Schema;
 

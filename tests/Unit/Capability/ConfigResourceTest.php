@@ -9,10 +9,10 @@
  * file that was distributed with this source code.
  */
 
-namespace MatesOfMate\PhpStan\Tests\Capability;
+namespace MatesOfMate\PhpStanExtension\Tests\Unit\Capability;
 
-use MatesOfMate\PhpStan\Capability\ConfigResource;
-use MatesOfMate\PhpStan\Config\ConfigurationDetector;
+use MatesOfMate\PhpStanExtension\Capability\ConfigResource;
+use MatesOfMate\PhpStanExtension\Config\ConfigurationDetector;
 use PHPUnit\Framework\TestCase;
 
 /**

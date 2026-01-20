@@ -34,12 +34,12 @@
     },
     "autoload": {
         "psr-4": {
-            "MatesOfMate\\PhpStan\\": "src/"
+            "MatesOfMate\\PhpStanExtension\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "MatesOfMate\\PhpStan\\Tests\\": "tests/"
+            "MatesOfMate\\PhpStanExtension\\Tests\\": "tests/"
         }
     },
     "extra": {

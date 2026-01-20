@@ -9,10 +9,10 @@
  * file that was distributed with this source code.
  */
 
-namespace MatesOfMate\PhpStan\Tests\Capability;
+namespace MatesOfMate\PhpStanExtension\Tests\Unit\Capability;
 
-use MatesOfMate\PhpStan\Capability\ClearCacheTool;
-use MatesOfMate\PhpStan\Runner\PhpStanRunner;
+use MatesOfMate\PhpStanExtension\Capability\ClearCacheTool;
+use MatesOfMate\PhpStanExtension\Runner\PhpStanRunner;
 use PHPUnit\Framework\TestCase;
 
 /**

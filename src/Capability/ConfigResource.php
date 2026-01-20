@@ -9,9 +9,9 @@
  * file that was distributed with this source code.
  */
 
-namespace MatesOfMate\PhpStan\Capability;
+namespace MatesOfMate\PhpStanExtension\Capability;
 
-use MatesOfMate\PhpStan\Config\ConfigurationDetector;
+use MatesOfMate\PhpStanExtension\Config\ConfigurationDetector;
 use Mcp\Capability\Attribute\McpResource;
 
 /**

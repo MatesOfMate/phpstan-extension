@@ -1,0 +1,4 @@
+# CODEOWNERS - Define code ownership for automatic review requests
+
+# Default owners for everything in the repo
+* @wachterjohannes

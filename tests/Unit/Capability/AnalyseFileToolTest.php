@@ -9,15 +9,15 @@
  * file that was distributed with this source code.
  */
 
-namespace MatesOfMate\PhpStan\Tests\Capability;
+namespace MatesOfMate\PhpStanExtension\Tests\Unit\Capability;
 
-use MatesOfMate\PhpStan\Capability\AnalyseFileTool;
-use MatesOfMate\PhpStan\Config\ConfigurationDetector;
-use MatesOfMate\PhpStan\Formatter\ToonFormatter;
-use MatesOfMate\PhpStan\Parser\AnalysisResult;
-use MatesOfMate\PhpStan\Parser\JsonOutputParser;
-use MatesOfMate\PhpStan\Runner\PhpStanRunner;
-use MatesOfMate\PhpStan\Runner\RunResult;
+use MatesOfMate\PhpStanExtension\Capability\AnalyseFileTool;
+use MatesOfMate\PhpStanExtension\Config\ConfigurationDetector;
+use MatesOfMate\PhpStanExtension\Formatter\ToonFormatter;
+use MatesOfMate\PhpStanExtension\Parser\AnalysisResult;
+use MatesOfMate\PhpStanExtension\Parser\JsonOutputParser;
+use MatesOfMate\PhpStanExtension\Runner\PhpStanRunner;
+use MatesOfMate\PhpStanExtension\Runner\RunResult;
 use PHPUnit\Framework\TestCase;
 
 /**

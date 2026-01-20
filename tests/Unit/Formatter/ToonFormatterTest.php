@@ -9,10 +9,10 @@
  * file that was distributed with this source code.
  */
 
-namespace MatesOfMate\PhpStan\Tests\Formatter;
+namespace MatesOfMate\PhpStanExtension\Tests\Unit\Formatter;
 
-use MatesOfMate\PhpStan\Formatter\ToonFormatter;
-use MatesOfMate\PhpStan\Parser\AnalysisResult;
+use MatesOfMate\PhpStanExtension\Formatter\ToonFormatter;
+use MatesOfMate\PhpStanExtension\Parser\AnalysisResult;
 use PHPUnit\Framework\TestCase;
 
 class ToonFormatterTest extends TestCase

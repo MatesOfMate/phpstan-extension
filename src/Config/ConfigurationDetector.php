@@ -9,7 +9,7 @@
  * file that was distributed with this source code.
  */
 
-namespace MatesOfMate\PhpStan\Config;
+namespace MatesOfMate\PhpStanExtension\Config;
 
 use MatesOfMate\Common\Config\ConfigurationDetector as CommonConfigDetector;
 use MatesOfMate\Common\Config\ConfigurationDetectorInterface;
