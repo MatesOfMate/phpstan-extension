@@ -49,7 +49,7 @@ class ToonFormatter
             $data['status'] = 'OK';
         } else {
             $data['errors'] = array_map(
-                fn (array $e): array => [
+                static fn (array $e): array => [
                     'file' => basename((string) $e['file']),
                     'line' => $e['line'],
                     'message' => $e['message'],
@@ -87,7 +87,7 @@ class ToonFormatter
             $data['status'] = 'OK';
         } else {
             $data['errors'] = array_map(
-                fn (array $e): array => [
+                static fn (array $e): array => [
                     'file' => $e['file'],
                     'line' => $e['line'],
                     'message' => $e['message'],

@@ -23,7 +23,7 @@
         "helgesverre/toon": "^1.0",
         "matesofmate/common": "^0.1@dev",
         "phpstan/phpstan": "^2.0",
-        "symfony/ai-mate": "^0.2 || ^0.3@dev",
+        "symfony/ai-mate": "^0.3@dev",
         "symfony/process": "^6.4|^7.0|^8.0"
     },
     "require-dev": {
@@ -49,7 +49,8 @@
             ],
             "includes": [
                 "config/config.php"
-            ]
+            ],
+            "instructions": "INSTRUCTIONS.md"
         },
         "branch-alias": {
             "dev-main": "0.1.x-dev"
