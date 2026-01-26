@@ -21,7 +21,7 @@
     "require": {
         "php": ">=8.2",
         "helgesverre/toon": "^1.0",
-        "matesofmate/common": "^0.1",
+        "matesofmate/common": "^0.2@dev",
         "phpstan/phpstan": "^2.0",
         "symfony/ai-mate": "^0.3 || ^0.4@dev",
         "symfony/process": "^6.4|^7.0|^8.0"
@@ -53,7 +53,7 @@
             "instructions": "INSTRUCTIONS.md"
         },
         "branch-alias": {
-            "dev-main": "0.1.x-dev"
+            "dev-main": "0.2.x-dev"
         }
     },
     "scripts": {
