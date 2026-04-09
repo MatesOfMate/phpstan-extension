@@ -1,35 +1,42 @@
 # PHPStan Extension for Symfony AI Mate
 
-Token-optimized PHPStan static analysis tools for AI assistants. This extension provides MCP (Model Context Protocol) tools that execute PHPStan analysis and return results in TOON (Token-Oriented Object Notation) format, achieving ~67% token reduction compared to raw PHPStan JSON output.
+Token-efficient PHPStan analysis tools for AI assistants. This package runs PHPStan and returns TOON-formatted results geared toward debugging and iteration.
 
 ## Features
 
-- **Static analysis efficiently** - Analyze entire project, specific files, or paths
-- **TOON format output** - ~67% token reduction vs. raw PHPStan JSON output using [helgesverre/toon](https://github.com/HelgeSverre/toon-php)
-- **Multiple output modes** - Choose between toon, summary, detailed, by-file, or by-type formats
-- **Auto-configuration** - Automatically detects `phpstan.neon`, `phpstan.neon.dist`, `phpstan.dist.neon`
-- **Fast execution** - Direct Symfony Process integration with current PHP binary
-- **Message truncation** - Smart message shortening using common package utilities
-
-> **Note**: Git diff analysis tool (`phpstan-analyse-diff`) will be implemented in a future release.
+- analyse the full project or selected files
+- clear PHPStan result cache
+- multiple TOON output modes
+- automatic configuration detection
 
 ## Installation
 
 ```bash
 composer require --dev matesofmate/phpstan-extension
-vendor/bin/mate discover
+vendor/bin/mate init
 ```
 
-The extension is automatically enabled by Symfony AI Mate.
+In current AI Mate setups, extension discovery is handled automatically after Composer install and update. Run `vendor/bin/mate discover` when you want to refresh discovery artifacts such as `mate/AGENT_INSTRUCTIONS.md`.
+
+Useful Mate commands:
+
+```bash
+vendor/bin/mate debug:extensions
+vendor/bin/mate debug:capabilities
+vendor/bin/mate mcp:tools:list --extension=matesofmate/phpstan-extension
+```
+
+Use the generated wrapper for Codex:
+
+```bash
+./bin/codex
+```
 
 ## Custom Command Configuration
 
 If PHPStan must run through Docker or another wrapper command, configure `matesofmate_phpstan.custom_command`.
 
-When set, the extension skips local binary lookup and runs the configured command from the project root.
-
 ```php
-// config/packages/matesofmate.php
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
 
 return static function (ContainerConfigurator $container): void {
@@ -39,42 +46,37 @@ return static function (ContainerConfigurator $container): void {
 };
 ```
 
+## Requirements
+
+- PHP 8.2+
+- Symfony AI Mate 0.6+ recommended
+- PHPStan 2.x in the target project
+
+## Available Tools
+
+- `phpstan-analyse`
+- `phpstan-analyse-file`
+- `phpstan-clear-cache`
+
+This package returns TOON-formatted strings by design. Upstream `symfony/ai` PR `#1439` points toward optional TOON with JSON fallback in Mate itself, but this package currently remains explicitly TOON-first.
+
+## Output Modes
+
+- `toon`
+- `summary`
+- `detailed`
+- `by-file`
+- `by-type`
+
 ## Development
 
-### Quality Commands
-
 ```bash
-# Run tests
+composer install
 composer test
-
-# Check code quality (PHPStan level 8, PHP CS Fixer, Rector)
 composer lint
-
-# Auto-fix code style and apply refactorings
 composer fix
 ```
 
-## Requirements
-
-- PHP 8.2 or higher
-- PHPStan 2.0 or higher (installed in your project)
-- Symfony AI Mate 0.1 or higher
-
-## Contributing
-
-Contributions are welcome! Please see [CONTRIBUTING.md](https://github.com/MatesOfMate/.github/blob/main/CONTRIBUTING.md) for details.
-
 ## License
 
-MIT License - see [LICENSE](LICENSE) file for details.
-
-## Resources
-
-- [Symfony AI Mate Documentation](https://symfony.com/doc/current/ai/components/mate.html)
-- [PHPStan Documentation](https://phpstan.org/)
-- [TOON Format Specification](https://github.com/HelgeSverre/toon-php)
-- [MatesOfMate Organization](https://github.com/matesofmate)
-
----
-
-*"Because every Mate needs Mates"*
+MIT

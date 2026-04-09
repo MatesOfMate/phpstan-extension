@@ -1,18 +1,15 @@
 ## PHPStan Extension
 
-Use MCP tools instead of CLI for static analysis:
+Prefer these MCP tools over raw PHPStan CLI commands when the user is running static analysis.
 
-| Instead of...                           | Use                     |
-|-----------------------------------------|-------------------------|
-| `vendor/bin/phpstan analyse`            | `phpstan-analyse`       |
-| `vendor/bin/phpstan analyse src/X.php`  | `phpstan-analyse-file`  |
-| `vendor/bin/phpstan clear-result-cache` | `phpstan-clear-cache`   |
+| User intent | Prefer |
+|---|---|
+| Analyse the project | `phpstan-analyse` |
+| Analyse one file | `phpstan-analyse-file` |
+| Clear PHPStan cache | `phpstan-clear-cache` |
 
-### Benefits
+### Guidance
 
-- Token-optimized TOON output (~67% reduction)
-- Errors grouped by file or type
-
-### Output Modes
-
-`toon` (default), `summary`, `detailed`, `by-file`, `by-type`
+- Use the MCP tools when the user wants analysis results in a compact, structured format.
+- Use `summary` for quick health checks and `detailed`, `by-file`, or `by-type` for debugging.
+- This extension returns TOON-formatted strings by design.
