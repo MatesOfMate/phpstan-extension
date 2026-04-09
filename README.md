@@ -22,6 +22,23 @@ vendor/bin/mate discover
 
 The extension is automatically enabled by Symfony AI Mate.
 
+## Custom Command Configuration
+
+If PHPStan must run through Docker or another wrapper command, configure `matesofmate_phpstan.custom_command`.
+
+When set, the extension skips local binary lookup and runs the configured command from the project root.
+
+```php
+// config/packages/matesofmate.php
+use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
+
+return static function (ContainerConfigurator $container): void {
+    $container->parameters()->set('matesofmate_phpstan.custom_command', [
+        'docker', 'compose', 'exec', 'php', 'vendor/bin/phpstan',
+    ]);
+};
+```
+
 ## Development
 
 ### Quality Commands

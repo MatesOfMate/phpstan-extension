@@ -29,11 +29,15 @@ return static function (ContainerConfigurator $container): void {
         ->autowire()
         ->autoconfigure();
 
+    $container->parameters()->set('matesofmate_phpstan.custom_command', []);
+
     // Core infrastructure
     $services->set('matesofmate_phpstan.process_executor', ProcessExecutor::class)
         ->arg('$vendorPaths', ['%mate.root_dir%/vendor/bin/phpstan']);
     $services->set(PhpStanRunner::class)
-        ->arg('$executor', service('matesofmate_phpstan.process_executor'));
+        ->arg('$executor', service('matesofmate_phpstan.process_executor'))
+        ->arg('$projectRoot', '%mate.root_dir%')
+        ->arg('$customCommand', '%matesofmate_phpstan.custom_command%');
 
     $services->set(JsonOutputParser::class);
     $services->set(ConfigurationDetector::class);

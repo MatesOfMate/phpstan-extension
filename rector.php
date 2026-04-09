@@ -13,16 +13,18 @@ use Rector\Config\RectorConfig;
 use Rector\PHPUnit\Set\PHPUnitSetList;
 use Rector\Set\ValueObject\LevelSetList;
 use Rector\Set\ValueObject\SetList;
+use Rector\TypeDeclaration\Rector\StmtsAwareInterface\SafeDeclareStrictTypesRector;
 
 return RectorConfig::configure()
     ->withPaths([
         __DIR__.'/src',
         __DIR__.'/tests',
     ])
+    ->withoutParallel()
     ->withSkip([
         __DIR__.'/vendor',
+        SafeDeclareStrictTypesRector::class,
     ])
-    ->withPhpSets(php82: true)
     ->withSets([
         LevelSetList::UP_TO_PHP_82,
         SetList::CODE_QUALITY,
