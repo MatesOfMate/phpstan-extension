@@ -1,12 +1,12 @@
 # PHPStan Extension for Symfony AI Mate
 
-Token-efficient PHPStan analysis tools for AI assistants. This package runs PHPStan and returns TOON-formatted results geared toward debugging and iteration.
+Token-efficient PHPStan analysis tools for AI assistants. This package runs PHPStan and returns encoded structured results geared toward debugging and iteration.
 
 ## Features
 
 - analyse the full project or selected files
 - clear PHPStan result cache
-- multiple TOON output modes
+- multiple compact output modes
 - automatic configuration detection
 
 ## Installation
@@ -49,7 +49,7 @@ return static function (ContainerConfigurator $container): void {
 ## Requirements
 
 - PHP 8.2+
-- Symfony AI Mate 0.6+ recommended
+- Symfony AI Mate 0.7+ required
 - PHPStan 2.x in the target project
 
 ## Available Tools
@@ -58,7 +58,7 @@ return static function (ContainerConfigurator $container): void {
 - `phpstan-analyse-file`
 - `phpstan-clear-cache`
 
-This package returns TOON-formatted strings by design. Upstream `symfony/ai` PR `#1439` points toward optional TOON with JSON fallback in Mate itself, but this package currently remains explicitly TOON-first.
+This package returns encoded strings through Mate's core `ResponseEncoder`. Install the suggested `helgesverre/toon` package if you want TOON responses; otherwise the same payload falls back to JSON.
 
 ## Output Modes
 

@@ -37,7 +37,7 @@ class AnalyseFileTool
 
     #[McpTool(
         name: 'phpstan-analyse-file',
-        description: 'Run PHPStan analysis on a specific file. Returns token-optimized TOON format. Available modes: "toon" (compact format), "summary" (totals only), "detailed" (full messages). Use for: validating changes to a single file, debugging specific file issues, focused analysis.',
+        description: 'Run PHPStan analysis on a specific file. Returns compact encoded output. Available modes: "toon" (compact format), "summary" (totals only), "detailed" (full messages). Use for: validating changes to a single file, debugging specific file issues, focused analysis.',
     )]
     public function execute(
         #[Schema(

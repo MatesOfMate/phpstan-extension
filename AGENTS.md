@@ -10,8 +10,8 @@ Maintain a package-specific MCP extension for PHPStan workflows. Keep package do
 
 - Register capabilities in `config/config.php`.
 - Keep docs aligned with the current Mate workflow and debug commands.
-- This package is TOON-first by design.
-- If you mention upstream PR `#1439`, treat it as upstream direction rather than merged local behavior.
+- This package uses Mate's core `ResponseEncoder` for MCP-facing payloads.
+- Describe TOON as optional runtime behavior provided by Mate, with JSON fallback.
 
 ## When Updating Behavior
 

@@ -14,6 +14,7 @@ namespace MatesOfMate\PhpStanExtension\Tests\Unit\Capability;
 use MatesOfMate\PhpStanExtension\Capability\ConfigResource;
 use MatesOfMate\PhpStanExtension\Config\ConfigurationDetector;
 use PHPUnit\Framework\TestCase;
+use Symfony\AI\Mate\Encoding\ResponseEncoder;
 
 /**
  * @author Johannes Wachter <johannes@sulu.io>
@@ -45,7 +46,7 @@ class ConfigResourceTest extends TestCase
         $this->assertSame('phpstan://config', $config['uri']);
     }
 
-    public function testGetConfigurationReturnsToonMimeType(): void
+    public function testGetConfigurationReturnsPlainTextMimeType(): void
     {
         $detector = $this->createMock(ConfigurationDetector::class);
         $detector->method('detect')->willReturn(null);
@@ -65,9 +66,10 @@ class ConfigResourceTest extends TestCase
         $resource = new ConfigResource($detector);
         $config = $resource->getConfiguration();
 
-        // TOON format is human-readable text, just check it contains expected values
-        $this->assertStringContainsString('config_exists', $config['text']);
-        $this->assertStringContainsString('/path/to/phpstan.neon', $config['text']);
-        $this->assertStringContainsString('6', $config['text']);
+        $decoded = ResponseEncoder::decode($config['text']);
+
+        $this->assertTrue($decoded['config_exists']);
+        $this->assertSame('/path/to/phpstan.neon', $decoded['config_file']);
+        $this->assertSame(6, $decoded['configured_level']);
     }
 }

@@ -12,4 +12,4 @@ Prefer these MCP tools over raw PHPStan CLI commands when the user is running st
 
 - Use the MCP tools when the user wants analysis results in a compact, structured format.
 - Use `summary` for quick health checks and `detailed`, `by-file`, or `by-type` for debugging.
-- This extension returns TOON-formatted strings by design.
+- This extension returns encoded structured payloads through Mate's core encoder.

@@ -4,7 +4,7 @@ Guidance for working on the PHPStan extension.
 
 ## Overview
 
-This package provides TOON-first PHPStan analysis tools for Symfony AI Mate.
+This package provides PHPStan analysis tools for Symfony AI Mate using Mate's core response encoder.
 
 ## Current Mate Workflow
 
@@ -19,13 +19,13 @@ This package provides TOON-first PHPStan analysis tools for Symfony AI Mate.
 - `src/Capability/` contains tools and resources
 - `src/Runner/` runs PHPStan
 - `src/Parser/` parses JSON output
-- `src/Formatter/` emits TOON output
+- `src/Formatter/` emits encoded MCP output
 - `config/config.php` registers services
 
 ## Output Strategy
 
-- This package intentionally returns TOON-formatted strings.
-- Upstream `symfony/ai` PR `#1439` is relevant context, but this package has not switched to an optional encoder pattern.
+- This package returns encoded strings through Mate's core `ResponseEncoder`.
+- Describe TOON as optional runtime behavior with JSON fallback.
 
 ## Service Registration
 

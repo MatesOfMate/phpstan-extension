@@ -12,9 +12,10 @@
 namespace MatesOfMate\PhpStanExtension\Formatter;
 
 use MatesOfMate\PhpStanExtension\Parser\AnalysisResult;
+use Symfony\AI\Mate\Encoding\ResponseEncoder;
 
 /**
- * Formats PHPStan analysis results using TOON (Token-Oriented Object Notation) for token-efficient output.
+ * Formats PHPStan analysis results for compact MCP responses.
  *
  * @internal
  *
@@ -59,12 +60,12 @@ class ToonFormatter
             );
         }
 
-        return toon($data);
+        return ResponseEncoder::encode($data);
     }
 
     private function formatSummary(AnalysisResult $result): string
     {
-        return toon([
+        return ResponseEncoder::encode([
             'files_with_errors' => $result->fileErrorCount,
             'total_errors' => $result->errorCount,
             'level' => $result->level ?? 'N/A',
@@ -97,7 +98,7 @@ class ToonFormatter
             );
         }
 
-        return toon($data);
+        return ResponseEncoder::encode($data);
     }
 
     private function formatByFile(AnalysisResult $result): string
@@ -119,7 +120,7 @@ class ToonFormatter
             'by_file' => $grouped,
         ];
 
-        return toon($data);
+        return ResponseEncoder::encode($data);
     }
 
     private function formatByType(AnalysisResult $result): string
@@ -144,7 +145,7 @@ class ToonFormatter
             'by_type' => $grouped,
         ];
 
-        return toon($data);
+        return ResponseEncoder::encode($data);
     }
 
     private function categorizeError(string $message): string

@@ -14,6 +14,7 @@ namespace MatesOfMate\PhpStanExtension\Tests\Unit\Formatter;
 use MatesOfMate\PhpStanExtension\Formatter\ToonFormatter;
 use MatesOfMate\PhpStanExtension\Parser\AnalysisResult;
 use PHPUnit\Framework\TestCase;
+use Symfony\AI\Mate\Encoding\ResponseEncoder;
 
 class ToonFormatterTest extends TestCase
 {
@@ -35,12 +36,11 @@ class ToonFormatterTest extends TestCase
             memoryUsage: '64MB',
         );
 
-        $output = $this->formatter->format($result, 'toon');
+        $decoded = ResponseEncoder::decode($this->formatter->format($result, 'toon'));
 
-        $this->assertStringContainsString('summary:', $output);
-        $this->assertStringContainsString('level:', $output);
-        $this->assertStringContainsString('6', $output);
-        $this->assertStringContainsString('status: OK', $output);
+        $this->assertSame(6, $decoded['summary']['level']);
+        $this->assertSame(0, $decoded['summary']['files_with_errors']);
+        $this->assertSame('OK', $decoded['status']);
     }
 
     public function testFormatToonWithErrors(): void
@@ -58,12 +58,11 @@ class ToonFormatterTest extends TestCase
             memoryUsage: '64MB',
         );
 
-        $output = $this->formatter->format($result, 'toon');
+        $decoded = ResponseEncoder::decode($this->formatter->format($result, 'toon'));
 
-        $this->assertStringContainsString('summary:', $output);
-        $this->assertStringContainsString('errors:', $output);
-        $this->assertStringContainsString('Test.php', $output);
-        $this->assertStringContainsString('Error message', $output);
+        $this->assertSame(1, $decoded['summary']['total_errors']);
+        $this->assertSame('Test.php', $decoded['errors'][0]['file']);
+        $this->assertSame('Error message', $decoded['errors'][0]['message']);
     }
 
     public function testFormatSummaryMode(): void
@@ -77,13 +76,11 @@ class ToonFormatterTest extends TestCase
             memoryUsage: '64MB',
         );
 
-        $output = $this->formatter->format($result, 'summary');
+        $decoded = ResponseEncoder::decode($this->formatter->format($result, 'summary'));
 
-        $this->assertStringContainsString('files_with_errors:', $output);
-        $this->assertStringContainsString('3', $output);
-        $this->assertStringContainsString('total_errors:', $output);
-        $this->assertStringContainsString('5', $output);
-        $this->assertStringContainsString('status: FAIL', $output);
+        $this->assertSame(3, $decoded['files_with_errors']);
+        $this->assertSame(5, $decoded['total_errors']);
+        $this->assertSame('FAIL', $decoded['status']);
     }
 
     public function testFormatDetailedMode(): void
@@ -101,12 +98,10 @@ class ToonFormatterTest extends TestCase
             memoryUsage: '64MB',
         );
 
-        $output = $this->formatter->format($result, 'detailed');
+        $decoded = ResponseEncoder::decode($this->formatter->format($result, 'detailed'));
 
-        $this->assertStringContainsString('summary:', $output);
-        $this->assertStringContainsString('errors:', $output);
-        $this->assertStringContainsString('/full/path/to/Test.php', $output);
-        $this->assertStringContainsString('Property has no type', $output);
+        $this->assertSame('/full/path/to/Test.php', $decoded['errors'][0]['file']);
+        $this->assertSame('Property has no type', $decoded['errors'][0]['message']);
     }
 
     public function testFormatByFileMode(): void
@@ -125,12 +120,11 @@ class ToonFormatterTest extends TestCase
             memoryUsage: '64MB',
         );
 
-        $output = $this->formatter->format($result, 'by-file');
+        $decoded = ResponseEncoder::decode($this->formatter->format($result, 'by-file'));
 
-        $this->assertStringContainsString('summary:', $output);
-        $this->assertStringContainsString('by_file:', $output);
-        $this->assertStringContainsString('File1.php', $output);
-        $this->assertStringContainsString('File2.php', $output);
+        $this->assertSame(2, $decoded['summary']['files_with_errors']);
+        $this->assertArrayHasKey('File1.php', $decoded['by_file']);
+        $this->assertArrayHasKey('File2.php', $decoded['by_file']);
     }
 
     public function testFormatByTypeMode(): void
@@ -149,12 +143,11 @@ class ToonFormatterTest extends TestCase
             memoryUsage: '64MB',
         );
 
-        $output = $this->formatter->format($result, 'by-type');
+        $decoded = ResponseEncoder::decode($this->formatter->format($result, 'by-type'));
 
-        $this->assertStringContainsString('summary:', $output);
-        $this->assertStringContainsString('by_type:', $output);
-        $this->assertStringContainsString('missing-type', $output);
-        $this->assertStringContainsString('missing-return-type', $output);
+        $this->assertSame(2, $decoded['summary']['total_errors']);
+        $this->assertArrayHasKey('missing-type', $decoded['by_type']);
+        $this->assertArrayHasKey('missing-return-type', $decoded['by_type']);
     }
 
     public function testFormatThrowsExceptionForInvalidMode(): void
@@ -173,9 +166,9 @@ class ToonFormatterTest extends TestCase
         ];
 
         $result = new AnalysisResult(1, 1, $errors, null, null, null);
-        $output = $this->formatter->format($result, 'by-type');
+        $decoded = ResponseEncoder::decode($this->formatter->format($result, 'by-type'));
 
-        $this->assertStringContainsString('missing-type', $output);
+        $this->assertArrayHasKey('missing-type', $decoded['by_type']);
     }
 
     public function testCategorizeErrorForMissingReturnType(): void
@@ -185,9 +178,9 @@ class ToonFormatterTest extends TestCase
         ];
 
         $result = new AnalysisResult(1, 1, $errors, null, null, null);
-        $output = $this->formatter->format($result, 'by-type');
+        $decoded = ResponseEncoder::decode($this->formatter->format($result, 'by-type'));
 
-        $this->assertStringContainsString('missing-return-type', $output);
+        $this->assertArrayHasKey('missing-return-type', $decoded['by_type']);
     }
 
     public function testCategorizeErrorForNullableReturn(): void
@@ -197,9 +190,9 @@ class ToonFormatterTest extends TestCase
         ];
 
         $result = new AnalysisResult(1, 1, $errors, null, null, null);
-        $output = $this->formatter->format($result, 'by-type');
+        $decoded = ResponseEncoder::decode($this->formatter->format($result, 'by-type'));
 
-        $this->assertStringContainsString('nullable-return', $output);
+        $this->assertArrayHasKey('nullable-return', $decoded['by_type']);
     }
 
     public function testCategorizeErrorForUndefinedProperty(): void
@@ -209,9 +202,9 @@ class ToonFormatterTest extends TestCase
         ];
 
         $result = new AnalysisResult(1, 1, $errors, null, null, null);
-        $output = $this->formatter->format($result, 'by-type');
+        $decoded = ResponseEncoder::decode($this->formatter->format($result, 'by-type'));
 
-        $this->assertStringContainsString('undefined-property', $output);
+        $this->assertArrayHasKey('undefined-property', $decoded['by_type']);
     }
 
     public function testCategorizeErrorForUndefinedMethod(): void
@@ -221,9 +214,9 @@ class ToonFormatterTest extends TestCase
         ];
 
         $result = new AnalysisResult(1, 1, $errors, null, null, null);
-        $output = $this->formatter->format($result, 'by-type');
+        $decoded = ResponseEncoder::decode($this->formatter->format($result, 'by-type'));
 
-        $this->assertStringContainsString('undefined-method', $output);
+        $this->assertArrayHasKey('undefined-method', $decoded['by_type']);
     }
 
     public function testCategorizeErrorForTypeMismatch(): void
@@ -233,9 +226,9 @@ class ToonFormatterTest extends TestCase
         ];
 
         $result = new AnalysisResult(1, 1, $errors, null, null, null);
-        $output = $this->formatter->format($result, 'by-type');
+        $decoded = ResponseEncoder::decode($this->formatter->format($result, 'by-type'));
 
-        $this->assertStringContainsString('type-mismatch', $output);
+        $this->assertArrayHasKey('type-mismatch', $decoded['by_type']);
     }
 
     public function testCategorizeErrorForOther(): void
@@ -245,8 +238,8 @@ class ToonFormatterTest extends TestCase
         ];
 
         $result = new AnalysisResult(1, 1, $errors, null, null, null);
-        $output = $this->formatter->format($result, 'by-type');
+        $decoded = ResponseEncoder::decode($this->formatter->format($result, 'by-type'));
 
-        $this->assertStringContainsString('other', $output);
+        $this->assertArrayHasKey('other', $decoded['by_type']);
     }
 }
