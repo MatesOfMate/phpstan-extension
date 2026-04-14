@@ -45,7 +45,7 @@ class AnalyseToolTest extends TestCase
         $formatter = $this->createMock(ToonFormatter::class);
         $formatter->expects($this->once())
             ->method('format')
-            ->with($analysisResult, 'toon')
+            ->with($analysisResult, 'default')
             ->willReturn('formatted output');
 
         $configDetector = $this->createMock(ConfigurationDetector::class);
@@ -105,7 +105,7 @@ class AnalyseToolTest extends TestCase
         $tool->execute(level: 8);
     }
 
-    public function testExecutePassesPathToRunner(): void
+    public function testExecutePassesPathToRunnerForSingleFile(): void
     {
         $runResult = new RunResult(0, '{"totals":{"file_errors":0},"files":{}}', '');
         $analysisResult = new AnalysisResult(0, 0, [], null, null, null);
@@ -113,7 +113,7 @@ class AnalyseToolTest extends TestCase
         $runner = $this->createMock(PhpStanRunner::class);
         $runner->expects($this->once())
             ->method('run')
-            ->with('analyse', ['src/'])
+            ->with('analyse', ['src/Foo.php'])
             ->willReturn($runResult);
 
         $parser = $this->createMock(JsonOutputParser::class);
@@ -126,10 +126,10 @@ class AnalyseToolTest extends TestCase
         $configDetector->method('detect')->willReturn(null);
 
         $tool = new AnalyseTool($runner, $parser, $formatter, $configDetector);
-        $tool->execute(path: 'src/');
+        $tool->execute(path: 'src/Foo.php');
     }
 
-    public function testExecuteSupportsMultipleFormatterModes(): void
+    public function testExecuteSupportsSummaryMode(): void
     {
         $runResult = new RunResult(0, '{"totals":{"file_errors":0},"files":{}}', '');
         $analysisResult = new AnalysisResult(0, 0, [], null, null, null);

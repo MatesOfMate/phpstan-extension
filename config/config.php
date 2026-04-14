@@ -10,7 +10,6 @@
  */
 
 use MatesOfMate\Common\Process\ProcessExecutor;
-use MatesOfMate\PhpStanExtension\Capability\AnalyseFileTool;
 use MatesOfMate\PhpStanExtension\Capability\AnalyseTool;
 use MatesOfMate\PhpStanExtension\Capability\ClearCacheTool;
 use MatesOfMate\PhpStanExtension\Capability\ConfigResource;
@@ -47,7 +46,6 @@ return static function (ContainerConfigurator $container): void {
 
     // Tools - automatically discovered by #[McpTool] attribute
     $services->set(AnalyseTool::class);
-    $services->set(AnalyseFileTool::class);
     $services->set(ClearCacheTool::class);
 
     // Resources - automatically discovered by #[McpResource] attribute

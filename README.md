@@ -4,9 +4,9 @@ Token-efficient PHPStan analysis tools for AI assistants. This package runs PHPS
 
 ## Features
 
-- analyse the full project or selected files
+- analyse the full project or a selected file or directory
 - clear PHPStan result cache
-- multiple compact output modes
+- three consistent compact output modes
 - automatic configuration detection
 
 ## Installation
@@ -55,18 +55,15 @@ return static function (ContainerConfigurator $container): void {
 ## Available Tools
 
 - `phpstan-analyse`
-- `phpstan-analyse-file`
 - `phpstan-clear-cache`
 
 This package returns encoded strings through Mate's core `ResponseEncoder`. Install the suggested `helgesverre/toon` package if you want TOON responses; otherwise the same payload falls back to JSON.
 
 ## Output Modes
 
-- `toon`
+- `default`
 - `summary`
 - `detailed`
-- `by-file`
-- `by-type`
 
 ## Development
 

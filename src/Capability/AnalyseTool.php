@@ -35,9 +35,15 @@ class AnalyseTool
     ) {
     }
 
+    /**
+     * @param string|null $configuration Path to the PHPStan configuration file. Defaults to auto-detection.
+     * @param int|null    $level         PHPStan rule level from 0 to 9
+     * @param string|null $path          File or directory path to analyse. Defaults to configured project paths.
+     * @param string      $mode          output detail level: default, summary, or detailed
+     */
     #[McpTool(
         name: 'phpstan-analyse',
-        description: 'Run PHPStan static analysis with compact encoded output. Available modes: "toon" (compact format), "summary" (totals only), "detailed" (full messages), "by-file" (grouped by file), "by-type" (grouped by error type). Use for: checking code quality, finding type errors, validating changes.',
+        description: 'Run PHPStan analysis for the project, a directory, or a single file.'
     )]
     public function execute(
         #[Schema(
@@ -56,9 +62,9 @@ class AnalyseTool
         ?string $path = null,
         #[Schema(
             description: 'Output format mode',
-            enum: ['toon', 'summary', 'detailed', 'by-file', 'by-type']
+            enum: ['default', 'summary', 'detailed']
         )]
-        string $mode = 'toon',
+        string $mode = 'default',
     ): string {
         $args = $this->buildPhpstanArgs(
             path: $path,
