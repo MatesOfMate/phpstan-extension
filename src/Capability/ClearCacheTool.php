@@ -29,10 +29,7 @@ class ClearCacheTool
     /**
      * @param string|null $configuration optional path to the PHPStan configuration file
      */
-    #[McpTool(
-        name: 'phpstan-clear-cache',
-        description: 'Clear the PHPStan result cache before running fresh analysis.'
-    )]
+    #[McpTool(name: 'phpstan-clear-cache', title: 'PHPStan Clear Cache', description: 'Clear the PHPStan result cache before running fresh analysis.')]
     public function execute(
         ?string $configuration = null,
     ): string {

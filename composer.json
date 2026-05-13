@@ -22,7 +22,7 @@
         "php": ">=8.2",
         "matesofmate/common": "^0.3",
         "phpstan/phpstan": "^2.0",
-        "symfony/ai-mate": "^0.8",
+        "symfony/ai-mate": "dev-main",
         "symfony/process": "^6.4|^7.0|^8.0"
     },
     "require-dev": {

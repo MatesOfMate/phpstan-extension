@@ -41,10 +41,7 @@ class AnalyseTool
      * @param string|null $path          File or directory path to analyse. Defaults to configured project paths.
      * @param string      $mode          output detail level: default, summary, or detailed
      */
-    #[McpTool(
-        name: 'phpstan-analyse',
-        description: 'Run PHPStan analysis for the project, a directory, or a single file.'
-    )]
+    #[McpTool(name: 'phpstan-analyse', title: 'PHPStan Analyse', description: 'Run PHPStan analysis for the project, a directory, or a single file.')]
     public function execute(
         #[Schema(
             description: 'Path to PHPStan configuration file (defaults to auto-detection)'
