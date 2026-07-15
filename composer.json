@@ -20,9 +20,9 @@
     ],
     "require": {
         "php": ">=8.2",
-        "matesofmate/common": "^0.3",
+        "matesofmate/common": "^0.3 || ^0.4@dev",
         "phpstan/phpstan": "^2.0",
-        "symfony/ai-mate": "^0.10 || dev-main",
+        "symfony/ai-mate": "^0.11 || dev-main",
         "symfony/process": "^6.4|^7.0|^8.0"
     },
     "require-dev": {
@@ -55,7 +55,7 @@
             "instructions": "INSTRUCTIONS.md"
         },
         "branch-alias": {
-            "dev-main": "0.3.x-dev"
+            "dev-main": "0.4.x-dev"
         }
     },
     "scripts": {
