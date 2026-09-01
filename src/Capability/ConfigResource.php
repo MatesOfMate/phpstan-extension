@@ -12,11 +12,11 @@
 namespace MatesOfMate\PhpStanExtension\Capability;
 
 use MatesOfMate\PhpStanExtension\Config\ConfigurationDetector;
-use Mcp\Capability\Attribute\McpResource;
+use Symfony\AI\Mate\Attribute\MateResource;
 use Symfony\AI\Mate\Encoding\ResponseEncoder;
 
 /**
- * Provides PHPStan configuration information as an MCP resource.
+ * Provides PHPStan configuration information as a Mate resource.
  *
  * @author Johannes Wachter <johannes@sulu.io>
  */
@@ -30,7 +30,7 @@ class ConfigResource
     /**
      * @return array{uri: string, mimeType: string, text: string}
      */
-    #[McpResource(
+    #[MateResource(
         uri: 'phpstan://config',
         name: 'phpstan_configuration',
         description: 'PHPStan project configuration details as an encoded structured payload. Provides project root, config file path, configured level, and full config content. Use for: understanding project setup, checking configured analysis level, locating configuration files, troubleshooting configuration issues.',

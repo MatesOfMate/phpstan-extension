@@ -11,7 +11,7 @@ This package provides PHPStan analysis tools for Symfony AI Mate using Mate's co
 - initialize projects with `vendor/bin/mate init`
 - current Mate setups auto-discover extensions after install and update
 - `vendor/bin/mate discover` refreshes discovery and generated instruction artifacts
-- use `./bin/codex` for Codex sessions
+- run tools from the CLI with `vendor/bin/mate tools:call <tool> --<param>=<value>`
 - use `vendor/bin/mate debug:extensions` and `vendor/bin/mate debug:capabilities` to troubleshoot loading problems
 
 ## Structure
@@ -19,7 +19,7 @@ This package provides PHPStan analysis tools for Symfony AI Mate using Mate's co
 - `src/Capability/` contains tools and resources
 - `src/Runner/` runs PHPStan
 - `src/Parser/` parses JSON output
-- `src/Formatter/` emits encoded MCP output
+- `src/Formatter/` emits encoded tool output
 - `config/config.php` registers services
 
 ## Output Strategy
@@ -38,7 +38,7 @@ composer install
 composer test
 composer lint
 composer fix
-vendor/bin/mate mcp:tools:list --extension=matesofmate/phpstan-extension
+vendor/bin/mate tools:list --extension=matesofmate/phpstan-extension
 ```
 
 ## Standards

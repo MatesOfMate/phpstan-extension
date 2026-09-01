@@ -23,13 +23,13 @@ Useful Mate commands:
 ```bash
 vendor/bin/mate debug:extensions
 vendor/bin/mate debug:capabilities
-vendor/bin/mate mcp:tools:list --extension=matesofmate/phpstan-extension
+vendor/bin/mate tools:list --extension=matesofmate/phpstan-extension
 ```
 
-Use the generated wrapper for Codex:
+Run a tool directly:
 
 ```bash
-./bin/codex
+vendor/bin/mate tools:call phpstan-analyse --mode=summary
 ```
 
 ## Custom Command Configuration
@@ -49,7 +49,7 @@ return static function (ContainerConfigurator $container): void {
 ## Requirements
 
 - PHP 8.2+
-- Symfony AI Mate 0.8+ required
+- Symfony AI Mate 0.13+ required
 - PHPStan 2.x in the target project
 
 ## Available Tools

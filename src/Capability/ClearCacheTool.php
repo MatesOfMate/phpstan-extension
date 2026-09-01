@@ -12,7 +12,7 @@
 namespace MatesOfMate\PhpStanExtension\Capability;
 
 use MatesOfMate\PhpStanExtension\Runner\PhpStanRunner;
-use Mcp\Capability\Attribute\McpTool;
+use Symfony\AI\Mate\Attribute\MateTool;
 
 /**
  * Clears PHPStan result cache for fresh analysis.
@@ -29,7 +29,7 @@ class ClearCacheTool
     /**
      * @param string|null $configuration optional path to the PHPStan configuration file
      */
-    #[McpTool(name: 'phpstan-clear-cache', title: 'PHPStan Clear Cache', description: 'Clear the PHPStan result cache before running fresh analysis.')]
+    #[MateTool(name: 'phpstan-clear-cache', title: 'PHPStan Clear Cache', description: 'Clear the PHPStan result cache before running fresh analysis.')]
     public function execute(
         ?string $configuration = null,
     ): string {

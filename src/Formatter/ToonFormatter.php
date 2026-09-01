@@ -15,7 +15,7 @@ use MatesOfMate\PhpStanExtension\Parser\AnalysisResult;
 use Symfony\AI\Mate\Encoding\ResponseEncoder;
 
 /**
- * Formats PHPStan analysis results for compact MCP responses.
+ * Formats PHPStan analysis results for compact tool responses.
  *
  * @internal
  *

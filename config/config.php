@@ -44,10 +44,10 @@ return static function (ContainerConfigurator $container): void {
 
     $services->set(ToonFormatter::class);
 
-    // Tools - automatically discovered by #[McpTool] attribute
+    // Tools - automatically discovered by #[MateTool] attribute
     $services->set(AnalyseTool::class);
     $services->set(ClearCacheTool::class);
 
-    // Resources - automatically discovered by #[McpResource] attribute
+    // Resources - automatically discovered by #[MateResource] attribute
     $services->set(ConfigResource::class);
 };

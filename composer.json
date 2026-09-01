@@ -22,7 +22,7 @@
         "php": ">=8.2",
         "matesofmate/common": "^0.6 || ^0.7@dev",
         "phpstan/phpstan": "^2.0",
-        "symfony/ai-mate": "^0.12 || dev-main",
+        "symfony/ai-mate": "^0.13 || dev-main",
         "symfony/process": "^6.4|^7.0|^8.0"
     },
     "require-dev": {
@@ -32,7 +32,7 @@
         "rector/rector": "^2.0"
     },
     "suggest": {
-        "helgesverre/toon": "Install for TOON-encoded MCP responses; JSON remains the fallback when it is not available"
+        "helgesverre/toon": "Install for TOON-encoded tool responses; JSON remains the fallback when it is not available"
     },
     "autoload": {
         "psr-4": {
