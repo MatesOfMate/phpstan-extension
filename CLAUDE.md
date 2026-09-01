@@ -4,7 +4,7 @@ Guidance for working on the PHPStan extension.
 
 ## Overview
 
-This package provides PHPStan analysis tools for Symfony AI Mate using Mate's core response encoder.
+This package provides PHPStan analysis tools for Symfony Mate using Mate's core response encoder.
 
 ## Current Mate Workflow
 

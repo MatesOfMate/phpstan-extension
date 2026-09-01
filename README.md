@@ -1,4 +1,4 @@
-# PHPStan Extension for Symfony AI Mate
+# PHPStan Extension for Symfony Mate
 
 Token-efficient PHPStan analysis tools for AI assistants. This package runs PHPStan and returns encoded structured results geared toward debugging and iteration.
 
@@ -16,7 +16,7 @@ composer require --dev matesofmate/phpstan-extension
 vendor/bin/mate init
 ```
 
-In current AI Mate setups, extension discovery is handled automatically after Composer install and update. Run `vendor/bin/mate discover` when you want to refresh discovery artifacts such as `mate/AGENT_INSTRUCTIONS.md`.
+In current Mate setups, extension discovery is handled automatically after Composer install and update. Run `vendor/bin/mate discover` when you want to refresh discovery artifacts such as `mate/AGENT_INSTRUCTIONS.md`.
 
 Useful Mate commands:
 
@@ -49,7 +49,7 @@ return static function (ContainerConfigurator $container): void {
 ## Requirements
 
 - PHP 8.2+
-- Symfony AI Mate 0.13+ required
+- Symfony Mate 0.13+ required
 - PHPStan 2.x in the target project
 
 ## Available Tools

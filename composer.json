@@ -1,6 +1,6 @@
 {
     "name": "matesofmate/phpstan-extension",
-    "description": "PHPStan extension for Symfony AI Mate providing AI assistants with efficient static analysis tools",
+    "description": "PHPStan extension for Symfony Mate providing AI assistants with efficient static analysis tools",
     "type": "symfony-ai-mate",
     "license": "MIT",
     "keywords": [
