@@ -12,3 +12,4 @@ Prefer these Mate tools over raw PHPStan CLI commands when the user is running s
 - Use the Mate tools when the user wants analysis results in a compact, structured format.
 - Use the `path` parameter on `phpstan-analyse` to target a single file or directory.
 - This extension returns encoded structured payloads through Mate's core encoder.
+- A `mate-phpstan-static-analysis` skill covers run scoping, error interpretation, and cache handling; consult it before improvising an analysis workflow.

@@ -59,6 +59,16 @@ return static function (ContainerConfigurator $container): void {
 
 This package returns encoded strings through Mate's core `ResponseEncoder`. Install the suggested `helgesverre/toon` package if you want TOON responses; otherwise the same payload falls back to JSON.
 
+## Agent Skills
+
+The extension ships Agent Skills that Mate installs into the project as `mate-<name>`:
+
+- `phpstan-static-analysis`: scoping a run, reading the error list, and when to clear the result cache
+
+```bash
+vendor/bin/mate skills:list
+```
+
 ## Output Modes
 
 - `default`

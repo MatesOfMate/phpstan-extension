@@ -4,6 +4,7 @@ CHANGELOG
 0.7.0
 -----
 
+ * Add a `phpstan-static-analysis` skill covering run scoping, error interpretation, and cache handling
  * Support symfony/ai-mate 0.13
  * Replace the `#[McpTool]` and `#[McpResource]` attributes with Mate's native `#[MateTool]` and `#[MateResource]`
  * Drop the `#[Schema]` parameter attributes; the input schema is now generated from the parameter types and `@param` docblocks

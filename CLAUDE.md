@@ -21,6 +21,7 @@ This package provides PHPStan analysis tools for Symfony Mate using Mate's core 
 - `src/Parser/` parses JSON output
 - `src/Formatter/` emits encoded tool output
 - `config/config.php` registers services
+- `skills/` ships the Agent Skills declared through `extra.ai-mate.skills`
 
 ## Output Strategy
 

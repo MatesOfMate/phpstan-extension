@@ -52,7 +52,10 @@
             "includes": [
                 "config/config.php"
             ],
-            "instructions": "INSTRUCTIONS.md"
+            "instructions": "INSTRUCTIONS.md",
+            "skills": [
+                "skills"
+            ]
         },
         "branch-alias": {
             "dev-main": "0.7.x-dev"
