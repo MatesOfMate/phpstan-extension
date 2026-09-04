@@ -25,12 +25,31 @@ class ToonFormatter
 {
     public function format(AnalysisResult $result, string $mode = 'default'): string
     {
+        if ($result->parseFailed) {
+            return $this->formatParseFailure($result);
+        }
+
         return match ($mode) {
             'default' => $this->formatDefault($result),
             'summary' => $this->formatSummary($result),
             'detailed' => $this->formatDetailed($result),
             default => throw new \InvalidArgumentException("Unknown format mode: {$mode}"),
         };
+    }
+
+    /**
+     * PHPStan's stdout did not decode as JSON. Surfacing the raw output (instead of throwing,
+     * as before) is what lets the agent see what PHPStan actually said rather than a bare
+     * "Syntax error" with the real diagnosis discarded.
+     */
+    private function formatParseFailure(AnalysisResult $result): string
+    {
+        return ResponseEncoder::encode([
+            'status' => 'PARSE_ERROR',
+            'diagnostics' => $result->diagnostics,
+            'raw_output' => $result->rawOutput,
+            'error_output' => $result->errorOutput,
+        ]);
     }
 
     private function formatDefault(AnalysisResult $result): string

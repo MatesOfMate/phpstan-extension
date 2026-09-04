@@ -112,4 +112,31 @@ class ToonFormatterTest extends TestCase
         $this->expectExceptionMessage('Unknown format mode: invalid-mode');
         $this->formatter->format($result, 'invalid-mode');
     }
+
+    /**
+     * A run whose stdout could not be parsed as JSON must surface the raw output, not throw
+     * and lose it, regardless of which mode was requested.
+     */
+    public function testFormatSurfacesRawOutputOnParseFailure(): void
+    {
+        $result = new AnalysisResult(
+            errorCount: 0,
+            fileErrorCount: 0,
+            errors: [],
+            level: null,
+            executionTime: null,
+            memoryUsage: null,
+            parseFailed: true,
+            rawOutput: 'PHPStan turbo extension: could not load.',
+            errorOutput: 'Fatal error: something broke',
+            diagnostics: ['Could not parse PHPStan JSON output; raw output is included.'],
+        );
+
+        $decoded = ResponseEncoder::decode($this->formatter->format($result, 'default'));
+
+        $this->assertSame('PARSE_ERROR', $decoded['status']);
+        $this->assertStringContainsString('PHPStan turbo extension', $decoded['raw_output']);
+        $this->assertStringContainsString('Fatal error', $decoded['error_output']);
+        $this->assertNotSame([], $decoded['diagnostics']);
+    }
 }

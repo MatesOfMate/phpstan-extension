@@ -22,6 +22,7 @@ class AnalysisResult
 {
     /**
      * @param array<int, array<string, mixed>> $errors
+     * @param list<string>                     $diagnostics
      */
     public function __construct(
         public readonly int $errorCount,
@@ -30,6 +31,10 @@ class AnalysisResult
         public readonly ?int $level,
         public readonly ?float $executionTime,
         public readonly ?string $memoryUsage,
+        public readonly bool $parseFailed = false,
+        public readonly ?string $rawOutput = null,
+        public readonly ?string $errorOutput = null,
+        public readonly array $diagnostics = [],
     ) {
     }
 

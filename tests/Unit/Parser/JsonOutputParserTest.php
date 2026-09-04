@@ -122,4 +122,65 @@ class JsonOutputParserTest extends TestCase
         $this->assertSame('src/File2.php', $result->errors[1]['file']);
         $this->assertSame('src/File2.php', $result->errors[2]['file']);
     }
+
+    public function testParseWithLeadingWarningBeforeJson(): void
+    {
+        $json = json_encode([
+            'totals' => ['errors' => 0, 'file_errors' => 0],
+            'files' => [],
+            'errors' => [],
+        ], \JSON_THROW_ON_ERROR);
+
+        $runResult = new RunResult(exitCode: 0, output: "PHPStan turbo extension: could not load, falling back.\n".$json, errorOutput: '');
+        $result = $this->parser->parse($runResult);
+
+        $this->assertFalse($result->parseFailed);
+        $this->assertSame(0, $result->errorCount);
+        $this->assertSame(0, $result->fileErrorCount);
+    }
+
+    public function testParseWithTrailingTextAfterJson(): void
+    {
+        $json = json_encode([
+            'totals' => ['errors' => 0, 'file_errors' => 1],
+            'files' => [
+                'src/Test.php' => [
+                    'errors' => 1,
+                    'messages' => [
+                        ['message' => 'Error message', 'line' => 1, 'ignorable' => true],
+                    ],
+                ],
+            ],
+            'errors' => [],
+        ], \JSON_THROW_ON_ERROR);
+
+        $runResult = new RunResult(exitCode: 1, output: $json."\nDone in 1.23s.", errorOutput: '');
+        $result = $this->parser->parse($runResult);
+
+        $this->assertFalse($result->parseFailed);
+        $this->assertSame(1, $result->errorCount);
+        $this->assertSame('src/Test.php', $result->errors[0]['file']);
+    }
+
+    public function testParseFallsBackToRawOutputWhenNoJsonIsPresent(): void
+    {
+        $runResult = new RunResult(exitCode: 1, output: 'PHPStan hit an internal error and printed a table instead.', errorOutput: 'Fatal error: something broke');
+        $result = $this->parser->parse($runResult);
+
+        $this->assertTrue($result->parseFailed);
+        $this->assertSame(0, $result->errorCount);
+        $this->assertSame([], $result->errors);
+        $this->assertStringContainsString('PHPStan hit an internal error', (string) $result->rawOutput);
+        $this->assertStringContainsString('Fatal error', (string) $result->errorOutput);
+        $this->assertNotSame([], $result->diagnostics);
+    }
+
+    public function testParseFallsBackOnEmptyOutput(): void
+    {
+        $runResult = new RunResult(exitCode: 1, output: '', errorOutput: '');
+        $result = $this->parser->parse($runResult);
+
+        $this->assertTrue($result->parseFailed);
+        $this->assertSame(0, $result->errorCount);
+    }
 }
