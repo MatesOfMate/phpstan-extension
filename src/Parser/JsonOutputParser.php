@@ -67,8 +67,13 @@ class JsonOutputParser
                 $errors[] = [
                     'file' => $file,
                     'line' => $message['line'] ?? 0,
-                    'message' => $this->truncator->truncate($message['message'] ?? '', 200),
+                    'message' => (string) ($message['message'] ?? ''),
                     'ignorable' => $message['ignorable'] ?? true,
+                    // PHPStan names the rule that produced each error
+                    // ("return.type", "argument.type", ...). It is a far better
+                    // grouping key than anything recovered from the message
+                    // text, and it was being parsed away here.
+                    'identifier' => $message['identifier'] ?? null,
                 ];
             }
         }

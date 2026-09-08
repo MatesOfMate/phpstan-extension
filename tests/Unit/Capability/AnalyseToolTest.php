@@ -11,9 +11,11 @@
 
 namespace MatesOfMate\PhpStanExtension\Tests\Unit\Capability;
 
+use MatesOfMate\Common\Cache\RunCache;
 use MatesOfMate\PhpStanExtension\Capability\AnalyseTool;
 use MatesOfMate\PhpStanExtension\Config\ConfigurationDetector;
 use MatesOfMate\PhpStanExtension\Formatter\ToonFormatter;
+use MatesOfMate\PhpStanExtension\Grouping\ErrorGrouper;
 use MatesOfMate\PhpStanExtension\Parser\AnalysisResult;
 use MatesOfMate\PhpStanExtension\Parser\JsonOutputParser;
 use MatesOfMate\PhpStanExtension\Runner\PhpStanRunner;
@@ -51,7 +53,7 @@ class AnalyseToolTest extends TestCase
         $configDetector = $this->createMock(ConfigurationDetector::class);
         $configDetector->method('detect')->willReturn(null);
 
-        $tool = new AnalyseTool($runner, $parser, $formatter, $configDetector);
+        $tool = new AnalyseTool($runner, $parser, $formatter, $configDetector, new ErrorGrouper(), $this->createMock(RunCache::class));
         $result = $tool->execute();
 
         $this->assertSame('formatted output', $result);
@@ -77,7 +79,7 @@ class AnalyseToolTest extends TestCase
         $configDetector = $this->createMock(ConfigurationDetector::class);
         $configDetector->method('detect')->willReturn(null);
 
-        $tool = new AnalyseTool($runner, $parser, $formatter, $configDetector);
+        $tool = new AnalyseTool($runner, $parser, $formatter, $configDetector, new ErrorGrouper(), $this->createMock(RunCache::class));
         $tool->execute(configuration: 'phpstan.neon');
     }
 
@@ -101,7 +103,7 @@ class AnalyseToolTest extends TestCase
         $configDetector = $this->createMock(ConfigurationDetector::class);
         $configDetector->method('detect')->willReturn(null);
 
-        $tool = new AnalyseTool($runner, $parser, $formatter, $configDetector);
+        $tool = new AnalyseTool($runner, $parser, $formatter, $configDetector, new ErrorGrouper(), $this->createMock(RunCache::class));
         $tool->execute(level: 8);
     }
 
@@ -125,8 +127,75 @@ class AnalyseToolTest extends TestCase
         $configDetector = $this->createMock(ConfigurationDetector::class);
         $configDetector->method('detect')->willReturn(null);
 
-        $tool = new AnalyseTool($runner, $parser, $formatter, $configDetector);
+        $tool = new AnalyseTool($runner, $parser, $formatter, $configDetector, new ErrorGrouper(), $this->createMock(RunCache::class));
         $tool->execute(path: 'src/Foo.php');
+    }
+
+    public function testExecuteStoresTheRunAndPassesItsIdToTheFormatter(): void
+    {
+        $runner = $this->createMock(PhpStanRunner::class);
+        $parser = $this->createMock(JsonOutputParser::class);
+        $formatter = $this->createMock(ToonFormatter::class);
+        $configDetector = $this->createMock(ConfigurationDetector::class);
+        $cache = $this->createMock(RunCache::class);
+
+        $result = new AnalysisResult(
+            errorCount: 2,
+            fileErrorCount: 1,
+            errors: [
+                ['file' => '/a.php', 'line' => 1, 'message' => 'x', 'identifier' => 'return.type'],
+                ['file' => '/b.php', 'line' => 2, 'message' => 'y', 'identifier' => 'return.type'],
+            ],
+            level: 6,
+            executionTime: 1.0,
+            memoryUsage: '64MB',
+        );
+
+        $runner->method('run')->willReturn($this->createStub(RunResult::class));
+        $parser->method('parse')->willReturn($result);
+        $cache->expects($this->once())->method('store')->willReturn('run-1');
+
+        $formatter->expects($this->once())
+            ->method('format')
+            ->with($result, 'default', 'run-1', $this->callback(
+                static fn (array $groups): bool => 1 === \count($groups) && 2 === $groups[0]['count']
+            ))
+            ->willReturn('formatted');
+
+        $tool = new AnalyseTool($runner, $parser, $formatter, $configDetector, new ErrorGrouper(), $cache);
+
+        $this->assertSame('formatted', $tool->execute());
+    }
+
+    public function testAnUnwritableCacheCostsTheRunIdAndNothingElse(): void
+    {
+        $runner = $this->createMock(PhpStanRunner::class);
+        $parser = $this->createMock(JsonOutputParser::class);
+        $formatter = $this->createMock(ToonFormatter::class);
+        $configDetector = $this->createMock(ConfigurationDetector::class);
+        $cache = $this->createMock(RunCache::class);
+
+        $result = new AnalysisResult(
+            errorCount: 1,
+            fileErrorCount: 1,
+            errors: [['file' => '/a.php', 'line' => 1, 'message' => 'x', 'identifier' => 'return.type']],
+            level: 6,
+            executionTime: 1.0,
+            memoryUsage: '64MB',
+        );
+
+        $runner->method('run')->willReturn($this->createStub(RunResult::class));
+        $parser->method('parse')->willReturn($result);
+        $cache->method('store')->willThrowException(new \RuntimeException('read-only file system'));
+
+        $formatter->expects($this->once())
+            ->method('format')
+            ->with($result, 'default', null, $this->anything())
+            ->willReturn('formatted');
+
+        $tool = new AnalyseTool($runner, $parser, $formatter, $configDetector, new ErrorGrouper(), $cache);
+
+        $this->assertSame('formatted', $tool->execute());
     }
 
     public function testExecuteSupportsSummaryMode(): void
@@ -149,7 +218,7 @@ class AnalyseToolTest extends TestCase
         $configDetector = $this->createMock(ConfigurationDetector::class);
         $configDetector->method('detect')->willReturn(null);
 
-        $tool = new AnalyseTool($runner, $parser, $formatter, $configDetector);
+        $tool = new AnalyseTool($runner, $parser, $formatter, $configDetector, new ErrorGrouper(), $this->createMock(RunCache::class));
         $result = $tool->execute(mode: 'summary');
 
         $this->assertSame('summary output', $result);
@@ -175,7 +244,7 @@ class AnalyseToolTest extends TestCase
         $configDetector = $this->createMock(ConfigurationDetector::class);
         $configDetector->method('detect')->willReturn(null);
 
-        $tool = new AnalyseTool($runner, $parser, $formatter, $configDetector);
+        $tool = new AnalyseTool($runner, $parser, $formatter, $configDetector, new ErrorGrouper(), $this->createMock(RunCache::class));
         $tool->execute(
             configuration: 'phpstan.neon',
             level: 8,

@@ -11,6 +11,7 @@
 
 namespace MatesOfMate\PhpStanExtension\Formatter;
 
+use MatesOfMate\PhpStanExtension\Grouping\ErrorGrouper;
 use MatesOfMate\PhpStanExtension\Parser\AnalysisResult;
 use Symfony\AI\Mate\Encoding\ResponseEncoder;
 
@@ -23,16 +24,24 @@ use Symfony\AI\Mate\Encoding\ResponseEncoder;
  */
 class ToonFormatter
 {
-    public function format(AnalysisResult $result, string $mode = 'default'): string
+    public function __construct(
+        private readonly ErrorGrouper $grouper = new ErrorGrouper(),
+    ) {
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $groups
+     */
+    public function format(AnalysisResult $result, string $mode = 'default', ?string $runId = null, ?array $groups = null): string
     {
         if ($result->parseFailed) {
             return $this->formatParseFailure($result);
         }
 
         return match ($mode) {
-            'default' => $this->formatDefault($result),
+            'default' => $this->formatDefault($result, $runId, $groups ?? $this->grouper->group($result->errors)),
             'summary' => $this->formatSummary($result),
-            'detailed' => $this->formatDetailed($result),
+            'detailed' => $this->formatDetailed($result, $runId, $groups ?? $this->grouper->group($result->errors)),
             default => throw new \InvalidArgumentException("Unknown format mode: {$mode}"),
         };
     }
@@ -52,7 +61,10 @@ class ToonFormatter
         ]);
     }
 
-    private function formatDefault(AnalysisResult $result): string
+    /**
+     * @param array<int, array<string, mixed>> $groups
+     */
+    private function formatDefault(AnalysisResult $result, ?string $runId, array $groups): string
     {
         $data = [
             'summary' => [
@@ -66,15 +78,22 @@ class ToonFormatter
         if (0 === $result->errorCount) {
             $data['status'] = 'OK';
         } else {
-            $data['errors'] = array_map(
-                static fn (array $e): array => [
-                    'file' => basename((string) $e['file']),
-                    'line' => $e['line'],
-                    'message' => $e['message'],
-                    'ignorable' => $e['ignorable'],
+            $data['groups'] = array_map(
+                static fn (array $g): array => [
+                    'id' => $g['id'],
+                    'count' => $g['count'],
+                    'identifier' => $g['identifier'] ?? '(none)',
+                    'keyed_by' => $g['keyedBy'],
+                    'example' => $g['summary'],
+                    'files' => implode(', ', \array_slice(array_keys($g['files']), 0, 3)),
                 ],
-                $result->errors
+                $groups
             );
+
+            if (null !== $runId) {
+                $data['run'] = $runId;
+                $data['next'] = \sprintf('phpstan-analysis-detail --id=%s [--group=g1] for the individual errors', $runId);
+            }
         }
 
         return ResponseEncoder::encode($data);
@@ -90,7 +109,10 @@ class ToonFormatter
         ]);
     }
 
-    private function formatDetailed(AnalysisResult $result): string
+    /**
+     * @param array<int, array<string, mixed>> $groups
+     */
+    private function formatDetailed(AnalysisResult $result, ?string $runId, array $groups): string
     {
         $data = [
             'summary' => [
@@ -104,15 +126,32 @@ class ToonFormatter
         if (0 === $result->errorCount) {
             $data['status'] = 'OK';
         } else {
-            $data['errors'] = array_map(
-                static fn (array $e): array => [
-                    'file' => $e['file'],
-                    'line' => $e['line'],
-                    'message' => $e['message'],
-                    'ignorable' => $e['ignorable'],
-                ],
-                $result->errors
+            $data['groups'] = array_map(
+                static function (array $g): array {
+                    $files = [];
+                    foreach ($g['members'] as $member) {
+                        $file = (string) ($member['file'] ?? '');
+                        $files[$file] = ($files[$file] ?? 0) + 1;
+                    }
+
+                    return [
+                        'id' => $g['id'],
+                        'count' => $g['count'],
+                        'identifier' => $g['identifier'] ?? '(none)',
+                        'keyed_by' => $g['keyedBy'],
+                        'example' => $g['summary'],
+                        // Full paths, unlike default's base names: this is what
+                        // tells two same-named files in different directories apart.
+                        'files' => $files,
+                    ];
+                },
+                $groups
             );
+
+            if (null !== $runId) {
+                $data['run'] = $runId;
+                $data['next'] = \sprintf('phpstan-analysis-detail --id=%s --group=g1 for the individual errors', $runId);
+            }
         }
 
         return ResponseEncoder::encode($data);

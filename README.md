@@ -55,6 +55,7 @@ return static function (ContainerConfigurator $container): void {
 ## Available Tools
 
 - `phpstan-analyse`
+- `phpstan-analysis-detail`
 - `phpstan-clear-cache`
 
 This package returns encoded strings through Mate's core `ResponseEncoder`. Install the suggested `helgesverre/toon` package if you want TOON responses; otherwise the same payload falls back to JSON.

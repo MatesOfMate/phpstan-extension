@@ -61,8 +61,11 @@ class ToonFormatterTest extends TestCase
         $decoded = ResponseEncoder::decode($this->formatter->format($result, 'default'));
 
         $this->assertSame(1, $decoded['summary']['total_errors']);
-        $this->assertSame('Test.php', $decoded['errors'][0]['file']);
-        $this->assertSame('Error message', $decoded['errors'][0]['message']);
+        // Errors are reported as groups: one entry per rule, with the number of
+        // places it fired, instead of one entry per error.
+        $this->assertSame(1, $decoded['groups'][0]['count']);
+        $this->assertSame('Error message', $decoded['groups'][0]['example']);
+        $this->assertSame('Test.php', $decoded['groups'][0]['files']);
     }
 
     public function testFormatSummaryMode(): void
@@ -100,8 +103,37 @@ class ToonFormatterTest extends TestCase
 
         $decoded = ResponseEncoder::decode($this->formatter->format($result, 'detailed'));
 
-        $this->assertSame('/full/path/to/Test.php', $decoded['errors'][0]['file']);
-        $this->assertSame('Property has no type', $decoded['errors'][0]['message']);
+        $this->assertSame('Property has no type', $decoded['groups'][0]['example']);
+        $this->assertSame(['/full/path/to/Test.php' => 1], $decoded['groups'][0]['files']);
+    }
+
+    /**
+     * `default` mode may collapse two same-named files, that is what `detailed`
+     * exists to still tell apart. If detailed also reported base names, two
+     * unrelated Invoice.php files would be indistinguishable from one another.
+     */
+    public function testFormatDetailedModeKeepsFullPathsApartForSameNamedFiles(): void
+    {
+        $errors = [
+            ['file' => '/app/src/Billing/Invoice.php', 'line' => 10, 'message' => 'Property has no type', 'ignorable' => true],
+            ['file' => '/app/src/Legacy/Invoice.php', 'line' => 20, 'message' => 'Property has no type', 'ignorable' => true],
+        ];
+
+        $result = new AnalysisResult(
+            errorCount: 2,
+            fileErrorCount: 2,
+            errors: $errors,
+            level: 6,
+            executionTime: 1.5,
+            memoryUsage: '64MB',
+        );
+
+        $decoded = ResponseEncoder::decode($this->formatter->format($result, 'detailed'));
+
+        $this->assertSame([
+            '/app/src/Billing/Invoice.php' => 1,
+            '/app/src/Legacy/Invoice.php' => 1,
+        ], $decoded['groups'][0]['files']);
     }
 
     public function testFormatThrowsExceptionForInvalidMode(): void

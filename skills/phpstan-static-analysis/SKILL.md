@@ -8,6 +8,7 @@ description: Run PHPStan through Mate and interpret its findings, for the whole 
 Runs PHPStan through Mate's CLI with `--error-format=json` and returns the parsed errors. Two tools and one resource:
 
 - `phpstan-analyse` (opt `path`, `level`, `configuration`, `mode`): analyses a file, a directory, or the configured project paths.
+- `phpstan-analysis-detail` (req `id`; opt `group`, `file`, `limit`): the individual errors behind a grouped `phpstan-analyse` result, read back from the cached run instead of analysing again.
 - `phpstan-clear-cache` (opt `configuration`): drops the result cache.
 - `phpstan://config`: project root, detected config file, `configured_level`, and the raw config content. `configuration` is auto-detected as `phpstan.neon`, `phpstan.neon.dist`, or `phpstan.dist.neon` in the project root.
 
@@ -25,13 +26,20 @@ These commands accept `--format`: `json` to parse the result, `toon` (when `helg
 
 - `summary` carries `level`, `files_with_errors`, `total_errors`, `time`; `status` is `OK` only at zero errors.
 - The summary `level` is always `N/A`: the analysis payload does not carry it back. When the level matters, take `configured_level` from `phpstan://config` instead.
-- Each error is `{file, line, message, ignorable}`.
+- `groups` collapse errors that come from the same PHPStan rule. `identifier` is the rule, for example `return.type`; `count` is how many places it fired and `files` is where. One rule failing thirty times is one thing to learn, not thirty.
+- `keyed_by` says how a group was formed: `identifier` when PHPStan named the rule, `fingerprint` when it did not and the message text had to stand in.
+- `run` is the id of the cached analysis and `next` spells out the call that reads it. Use `phpstan-analysis-detail --id=<run> --group=g1` rather than re-running: the errors are already stored.
+- An individual error is `{file, line, message, identifier, ignorable}`.
 - `ignorable: false` is a different kind of finding. Those cannot be silenced through `ignoreErrors`; they are parse errors, internal errors, or the analysis giving up on a file. Treat one as a broken file to fix first, not as an item on the error list.
-- Messages are truncated to 200 characters. When the cut-off half is what you need, open the file at the reported line instead of guessing.
-- `mode` decides the detail. `summary`: counts only. `default`: errors with the base file name. `detailed`: the full path, which is what tells two `Invoice.php` apart.
+- Messages are no longer truncated.
+- `mode` decides the detail. `summary`: counts only. `default`: the groups with the base file names. `detailed`: the full paths, which is what tells two `Invoice.php` apart.
 - Compare against the count you started from. An unchanged count means your change introduced nothing new, even in a project that is not at zero.
 
 ## Failure paths
+
+- "Unknown run id": only the last 20 analyses are kept, so the run has been evicted or the id came from an older session. Run `phpstan-analyse` again for a current one.
+- `truncated: true` on a detail response: more errors matched than `limit`. Raise it or narrow with `group`/`file`; do not count the returned entries as the total.
+- A result with `groups` but no `run`: the cache could not be written. The analysis itself is unaffected.
 
 - Results look stale or contradict the source: PHPStan caches. Run `vendor/bin/mate tools:call phpstan-clear-cache` and analyse again, especially after a dependency or config change.
 - The call errors instead of returning findings: anything that stops PHPStan producing JSON (missing binary, a fatal in a bootstrap file, an unreadable config) surfaces as a failed call, not as zero errors. The message is about the setup, not the code.

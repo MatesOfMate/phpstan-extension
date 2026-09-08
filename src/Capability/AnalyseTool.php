@@ -11,8 +11,10 @@
 
 namespace MatesOfMate\PhpStanExtension\Capability;
 
+use MatesOfMate\Common\Cache\RunCache;
 use MatesOfMate\PhpStanExtension\Config\ConfigurationDetector;
 use MatesOfMate\PhpStanExtension\Formatter\ToonFormatter;
+use MatesOfMate\PhpStanExtension\Grouping\ErrorGrouper;
 use MatesOfMate\PhpStanExtension\Parser\JsonOutputParser;
 use MatesOfMate\PhpStanExtension\Runner\PhpStanRunner;
 use Symfony\AI\Mate\Attribute\MateTool;
@@ -31,6 +33,8 @@ class AnalyseTool
         private readonly JsonOutputParser $parser,
         private readonly ToonFormatter $formatter,
         private readonly ConfigurationDetector $configDetector,
+        private readonly ErrorGrouper $grouper,
+        private readonly RunCache $cache,
     ) {
     }
 
@@ -56,6 +60,33 @@ class AnalyseTool
         $runResult = $this->runner->run('analyse', $args);
         $analysisResult = $this->parser->parse($runResult);
 
-        return $this->formatter->format($analysisResult, $mode);
+        // Neither a parse failure nor summary mode ever reads a run id back, so
+        // grouping and caching would only spend a cache slot for nothing reachable.
+        if ($analysisResult->parseFailed || 'summary' === $mode) {
+            return $this->formatter->format($analysisResult, $mode);
+        }
+
+        $groups = $this->grouper->group($analysisResult->errors);
+        $runId = $this->remember($groups);
+
+        return $this->formatter->format($analysisResult, $mode, $runId, $groups);
+    }
+
+    /**
+     * A cache that cannot be written costs a run id, never the response.
+     *
+     * @param array<int, array<string, mixed>> $groups
+     */
+    private function remember(array $groups): ?string
+    {
+        if ([] === $groups) {
+            return null;
+        }
+
+        try {
+            return $this->cache->store(['groups' => $groups]);
+        } catch (\Throwable) {
+            return null;
+        }
     }
 }
