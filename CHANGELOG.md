@@ -1,6 +1,11 @@
 CHANGELOG
 =========
 
+0.7.2
+-----
+
+ * Support symfony/ai-mate 1.0.0-BETA1
+
 0.7.1
 -----
 
